@@ -144,16 +144,21 @@ export function ResultsTable({ results }: ResultsTableProps) {
                   {new Date(result.last_seen_at).toLocaleDateString()}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                  {result.listing_url && (
+                  {result.listing_url ? (
                     <a
                       href={result.listing_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-primary-600 hover:text-primary-900 flex items-center space-x-1"
+                      className="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-primary-600 rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors"
                     >
-                      <ExternalLink className="w-4 h-4" />
-                      <span>View</span>
+                      <ExternalLink className="w-4 h-4 mr-1" />
+                      Buy Link
                     </a>
+                  ) : (
+                    <span className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-500 bg-gray-100 rounded-md">
+                      <X className="w-4 h-4 mr-1" />
+                      No URL
+                    </span>
                   )}
                 </td>
               </tr>
