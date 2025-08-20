@@ -3,6 +3,7 @@ import { Header } from './components/Header'
 import { DomainLookup } from './pages/DomainLookup'
 import { CSVUpload } from './pages/CSVUpload'
 import { Dashboard } from './pages/Dashboard'
+import { Admin } from './pages/Admin'
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
           <Route path="/" element={<Dashboard />} />
           <Route path="/lookup" element={<DomainLookup />} />
           <Route path="/upload" element={<CSVUpload />} />
+          <Route path="/admin" element={<Admin />} />
         </Routes>
       </main>
     </div>

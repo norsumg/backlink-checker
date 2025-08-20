@@ -20,8 +20,8 @@ export function ResultsTable({ results }: ResultsTableProps) {
   }
 
   const sortedResults = [...results].sort((a, b) => {
-    const aValue = a[sortField]
-    const bValue = b[sortField]
+    let aValue = a[sortField]
+    let bValue = b[sortField]
     
     // Handle null/undefined values
     if (aValue === null || aValue === undefined) aValue = 0

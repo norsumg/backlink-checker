@@ -1,10 +1,11 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Search, Upload, BarChart3 } from 'lucide-react'
+import { Search, Upload, BarChart3, Settings } from 'lucide-react'
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: BarChart3 },
   { name: 'Domain Lookup', href: '/lookup', icon: Search },
   { name: 'Upload CSV', href: '/upload', icon: Upload },
+  { name: 'Admin', href: '/admin', icon: Settings },
 ]
 
 export function Header() {
