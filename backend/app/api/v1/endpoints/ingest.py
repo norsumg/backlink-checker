@@ -67,11 +67,16 @@ async def upload_csv(
         # Get or create marketplace
         # Note: Currently all offers use the same marketplace from the form
         # Future enhancement: Support individual marketplace columns from CSV
-        marketplace = marketplace_service.get_or_create_marketplace(
-            name=upload_request.marketplace_name,
-            slug=upload_request.marketplace_slug,
-            region=upload_request.region
-        )
+        try:
+            marketplace = marketplace_service.get_or_create_marketplace(
+                name=upload_request.marketplace_name,
+                slug=upload_request.marketplace_slug,
+                region=upload_request.region
+            )
+            print(f"Marketplace: ID={marketplace.id}, Name='{marketplace.name}', Slug='{marketplace.slug}'")
+        except Exception as e:
+            print(f"Error creating/finding marketplace: {e}")
+            raise HTTPException(status_code=500, detail=f"Failed to create/find marketplace: {str(e)}")
         
         # Process data
         total_rows = len(df)
@@ -161,43 +166,51 @@ async def upload_csv(
                         dofollow = bool(dofollow_raw)
                 
                 # Check if offer already exists
-                existing_offer = offer_service.get_offer_by_domain_and_marketplace(
-                    domain_record.id, marketplace.id
-                )
-                
-                if existing_offer:
-                    # Update existing offer
-                    offer_service.update_offer(existing_offer.id, {
-                        'price_amount': price_amount_decimal,
-                        'price_currency': currency,
-                        'price_usd': price_usd,
-                        'listing_url': listing_url,
-                        'includes_content': includes_content,
-                        'dofollow': dofollow,
-                    })
-                    updated_offers += 1
-                else:
-                    # Create new offer
-                    offer_data = {
-                        'domain_id': domain_record.id,
-                        'marketplace_id': marketplace.id,
-                        'listing_url': listing_url,
-                        'price_amount': price_amount_decimal,
-                        'price_currency': currency,
-                        'price_usd': price_usd,
-                        'includes_content': includes_content,
-                        'dofollow': dofollow,
-                    }
-                    print(f"Creating offer with data: {offer_data}")
-                    try:
-                        offer = offer_service.create_offer(offer_data)
-                        print(f"Created offer ID: {offer.id}")
-                        new_offers += 1
-                    except Exception as e:
-                        print(f"Error creating offer: {e}")
-                        errors.append(f"Row {index + 1}: Failed to create offer: {str(e)}")
-                        failed_imports += 1
-                        continue
+                try:
+                    existing_offer = offer_service.get_offer_by_domain_and_marketplace(
+                        domain_record.id, marketplace.id
+                    )
+                    
+                    if existing_offer:
+                        print(f"Updating existing offer ID {existing_offer.id} for domain {domain_record.root_domain}")
+                        # Update existing offer
+                        offer_service.update_offer(existing_offer.id, {
+                            'price_amount': price_amount_decimal,
+                            'price_currency': currency,
+                            'price_usd': price_usd,
+                            'listing_url': listing_url,
+                            'includes_content': includes_content,
+                            'dofollow': dofollow,
+                        })
+                        updated_offers += 1
+                    else:
+                        print(f"Creating new offer for domain {domain_record.root_domain}")
+                        # Create new offer
+                        offer_data = {
+                            'domain_id': domain_record.id,
+                            'marketplace_id': marketplace.id,
+                            'listing_url': listing_url,
+                            'price_amount': price_amount_decimal,
+                            'price_currency': currency,
+                            'price_usd': price_usd,
+                            'includes_content': includes_content,
+                            'dofollow': dofollow,
+                        }
+                        print(f"Creating offer with data: {offer_data}")
+                        try:
+                            offer = offer_service.create_offer(offer_data)
+                            print(f"Created offer ID: {offer.id}")
+                            new_offers += 1
+                        except Exception as e:
+                            print(f"Error creating offer: {e}")
+                            errors.append(f"Row {index + 1}: Failed to create offer: {str(e)}")
+                            failed_imports += 1
+                            continue
+                except Exception as e:
+                    print(f"Error in offer lookup/creation: {e}")
+                    errors.append(f"Row {index + 1}: Error in offer processing: {str(e)}")
+                    failed_imports += 1
+                    continue
                 
                 successful_imports += 1
                 
