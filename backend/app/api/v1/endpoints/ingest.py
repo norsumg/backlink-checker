@@ -119,6 +119,14 @@ async def upload_csv(
                     if pd.notna(currency_raw) and str(currency_raw).strip():
                         currency = str(currency_raw).strip().upper()
                 
+                # Ensure price_amount is properly formatted for database
+                try:
+                    price_amount_decimal = Decimal(str(price_amount))
+                except (ValueError, TypeError):
+                    errors.append(f"Row {index + 1}: Invalid price amount '{price_amount}'")
+                    failed_imports += 1
+                    continue
+                
                 # Convert to USD
                 price_usd = fx_service.convert_to_usd(price_amount_decimal, currency)
                 # If conversion fails, use original price as fallback
@@ -132,14 +140,6 @@ async def upload_csv(
                 
                 # Debug logging
                 print(f"Row {index + 1}: Amount={price_amount}, Currency={currency}, USD={price_usd}")
-                
-                # Ensure price_amount is properly formatted for database
-                try:
-                    price_amount_decimal = Decimal(str(price_amount))
-                except (ValueError, TypeError):
-                    errors.append(f"Row {index + 1}: Invalid price amount '{price_amount}'")
-                    failed_imports += 1
-                    continue
                 
                 # Get optional fields
                 listing_url = None
