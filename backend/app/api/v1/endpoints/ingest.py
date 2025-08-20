@@ -8,10 +8,7 @@ import time
 
 from app.core.database import get_db
 from app.schemas.csv_upload import CSVUploadRequest, CSVUploadResponse
-from app.services.marketplace_service import MarketplaceService
-from app.services.domain_service import DomainService
-from app.services.offer_service import OfferService
-from app.services.fx_service import FXService
+from app.services.csv_processing_service import CSVProcessingService
 
 router = APIRouter()
 
@@ -45,12 +42,6 @@ async def upload_csv(
     except Exception as e:
         raise HTTPException(status_code=422, detail=f"Invalid request data: {str(e)}")
     
-    # Initialize services
-    marketplace_service = MarketplaceService(db)
-    domain_service = DomainService(db)
-    offer_service = OfferService(db)
-    fx_service = FXService(db)
-    
     try:
         # Read file
         if file.filename.lower().endswith('.csv'):
@@ -64,172 +55,22 @@ async def upload_csv(
         if missing_columns:
             raise HTTPException(status_code=400, detail=f"Missing required columns: {missing_columns}")
         
-        # Get or create marketplace
-        # Note: Currently all offers use the same marketplace from the form
-        # Future enhancement: Support individual marketplace columns from CSV
-        try:
-            marketplace = marketplace_service.get_or_create_marketplace(
-                name=upload_request.marketplace_name,
-                slug=upload_request.marketplace_slug,
-                region=upload_request.region
-            )
-            print(f"Marketplace: ID={marketplace.id}, Name='{marketplace.name}', Slug='{marketplace.slug}'")
-        except Exception as e:
-            print(f"Error creating/finding marketplace: {e}")
-            raise HTTPException(status_code=500, detail=f"Failed to create/find marketplace: {str(e)}")
-        
-        # Process data
-        total_rows = len(df)
-        successful_imports = 0
-        failed_imports = 0
-        new_domains = 0
-        new_offers = 0
-        updated_offers = 0
-        errors = []
-        
-        for index, row in df.iterrows():
-            try:
-                # Extract data from row
-                domain_raw = str(row[upload_request.column_mapping.domain_column]).strip()
-                price_raw = row[upload_request.column_mapping.price_column]
-                
-                # Skip empty rows
-                if not domain_raw or pd.isna(price_raw):
-                    continue
-                
-                # Normalize domain
-                domain = domain_service.normalize_domain(domain_raw)
-                if not domain:
-                    errors.append(f"Row {index + 1}: Invalid domain '{domain_raw}'")
-                    failed_imports += 1
-                    continue
-                
-                # Get or create domain
-                domain_record = domain_service.get_or_create_domains([domain])[0]
-                if domain_record.id is None:  # New domain
-                    new_domains += 1
-                
-                # Parse price
-                try:
-                    price_amount = float(price_raw)
-                except (ValueError, TypeError):
-                    errors.append(f"Row {index + 1}: Invalid price '{price_raw}'")
-                    failed_imports += 1
-                    continue
-                
-                # Get currency
-                currency = upload_request.currency_default
-                if upload_request.column_mapping.currency_column and upload_request.column_mapping.currency_column in df.columns:
-                    currency_raw = row[upload_request.column_mapping.currency_column]
-                    if pd.notna(currency_raw) and str(currency_raw).strip():
-                        currency = str(currency_raw).strip().upper()
-                
-                # Ensure price_amount is properly formatted for database
-                try:
-                    price_amount_decimal = Decimal(str(price_amount))
-                except (ValueError, TypeError):
-                    errors.append(f"Row {index + 1}: Invalid price amount '{price_amount}'")
-                    failed_imports += 1
-                    continue
-                
-                # Convert to USD
-                price_usd = fx_service.convert_to_usd(price_amount_decimal, currency)
-                # If conversion fails, use original price as fallback
-                if price_usd is None:
-                    if currency.upper() == 'USD':
-                        price_usd = price_amount
-                    else:
-                        # For non-USD currencies, try to get rate from database
-                        # If still no rate, set to None (will be handled by frontend)
-                        price_usd = None
-                
-                # Debug logging
-                print(f"Row {index + 1}: Amount={price_amount}, Currency={currency}, USD={price_usd}")
-                
-                # Get optional fields
-                listing_url = None
-                if upload_request.column_mapping.url_column and upload_request.column_mapping.url_column in df.columns:
-                    url_raw = row[upload_request.column_mapping.url_column]
-                    if pd.notna(url_raw) and str(url_raw).strip():
-                        listing_url = str(url_raw).strip()
-                
-                includes_content = upload_request.content_default
-                if upload_request.column_mapping.content_column and upload_request.column_mapping.content_column in df.columns:
-                    content_raw = row[upload_request.column_mapping.content_column]
-                    if pd.notna(content_raw):
-                        includes_content = bool(content_raw)
-                
-                dofollow = upload_request.dofollow_default
-                if upload_request.column_mapping.dofollow_column and upload_request.column_mapping.dofollow_column in df.columns:
-                    dofollow_raw = row[upload_request.column_mapping.dofollow_column]
-                    if pd.notna(dofollow_raw):
-                        dofollow = bool(dofollow_raw)
-                
-                # Check if offer already exists
-                try:
-                    existing_offer = offer_service.get_offer_by_domain_and_marketplace(
-                        domain_record.id, marketplace.id
-                    )
-                    
-                    if existing_offer:
-                        print(f"Updating existing offer ID {existing_offer.id} for domain {domain_record.root_domain}")
-                        # Update existing offer
-                        offer_service.update_offer(existing_offer.id, {
-                            'price_amount': price_amount_decimal,
-                            'price_currency': currency,
-                            'price_usd': price_usd,
-                            'listing_url': listing_url,
-                            'includes_content': includes_content,
-                            'dofollow': dofollow,
-                        })
-                        updated_offers += 1
-                    else:
-                        print(f"Creating new offer for domain {domain_record.root_domain}")
-                        # Create new offer
-                        offer_data = {
-                            'domain_id': domain_record.id,
-                            'marketplace_id': marketplace.id,
-                            'listing_url': listing_url,
-                            'price_amount': price_amount_decimal,
-                            'price_currency': currency,
-                            'price_usd': price_usd,
-                            'includes_content': includes_content,
-                            'dofollow': dofollow,
-                        }
-                        print(f"Creating offer with data: {offer_data}")
-                        try:
-                            offer = offer_service.create_offer(offer_data)
-                            print(f"Created offer ID: {offer.id}")
-                            new_offers += 1
-                        except Exception as e:
-                            print(f"Error creating offer: {e}")
-                            errors.append(f"Row {index + 1}: Failed to create offer: {str(e)}")
-                            failed_imports += 1
-                            continue
-                except Exception as e:
-                    print(f"Error in offer lookup/creation: {e}")
-                    errors.append(f"Row {index + 1}: Error in offer processing: {str(e)}")
-                    failed_imports += 1
-                    continue
-                
-                successful_imports += 1
-                
-            except Exception as e:
-                errors.append(f"Row {index + 1}: {str(e)}")
-                failed_imports += 1
+        # Process CSV using the new service
+        csv_processor = CSVProcessingService(db, upload_request, df)
+        results = csv_processor.process()
         
         processing_time_ms = int((time.time() - start_time) * 1000)
         
         return CSVUploadResponse(
-            marketplace_id=marketplace.id,
-            total_rows_processed=total_rows,
-            successful_imports=successful_imports,
-            failed_imports=failed_imports,
-            new_domains_added=new_domains,
-            new_offers_added=new_offers,
-            updated_offers=updated_offers,
+            marketplace_id=csv_processor.marketplace.id,
+            total_rows_processed=len(df),
+            successful_imports=results['successful_imports'],
+            failed_imports=results['failed_imports'],
+            new_domains_added=results['new_domains'],
+            new_offers_added=results['new_offers'],
+            updated_offers=results['updated_offers'],
             processing_time_ms=processing_time_ms,
-            errors=errors[:10]  # Limit errors to first 10
+            errors=results['errors'][:10]  # Limit errors to first 10
         )
         
     except Exception as e:
