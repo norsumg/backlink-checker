@@ -1,0 +1,6 @@
+Domain,Price,Currency,URL,Includes Content,Dofollow
+example.com,150.00,USD,https://whitepress.com/example-com,true,true
+techcrunch.com,500.00,USD,https://whitepress.com/techcrunch-com,false,true
+forbes.com,750.00,USD,https://whitepress.com/forbes-com,true,true
+wired.com,300.00,USD,https://whitepress.com/wired-com,false,true
+theverge.com,400.00,USD,https://whitepress.com/theverge-com,true,true

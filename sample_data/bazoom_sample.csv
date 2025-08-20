@@ -1,0 +1,6 @@
+website,price_euro,listing_link,has_content,is_dofollow
+example.com,120.50,EUR,https://bazoom.com/example-com,1,1
+techcrunch.com,450.00,EUR,https://bazoom.com/techcrunch-com,0,1
+forbes.com,650.00,EUR,https://bazoom.com/forbes-com,1,1
+wired.com,250.00,EUR,https://bazoom.com/wired-com,0,1
+theverge.com,350.00,EUR,https://bazoom.com/theverge-com,1,1
