@@ -120,7 +120,7 @@ async def upload_csv(
                         currency = str(currency_raw).strip().upper()
                 
                 # Convert to USD
-                price_usd = fx_service.convert_to_usd(price_amount, currency)
+                price_usd = fx_service.convert_to_usd(price_amount_decimal, currency)
                 # If conversion fails, use original price as fallback
                 if price_usd is None:
                     if currency.upper() == 'USD':
