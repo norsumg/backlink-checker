@@ -64,6 +64,8 @@ async def upload_csv(
             raise HTTPException(status_code=400, detail=f"Missing required columns: {missing_columns}")
         
         # Get or create marketplace
+        # Note: Currently all offers use the same marketplace from the form
+        # Future enhancement: Support individual marketplace columns from CSV
         marketplace = marketplace_service.get_or_create_marketplace(
             name=upload_request.marketplace_name,
             slug=upload_request.marketplace_slug,

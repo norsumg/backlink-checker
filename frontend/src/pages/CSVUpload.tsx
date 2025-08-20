@@ -29,6 +29,11 @@ export function CSVUpload() {
     content: false,
     dofollow: true,
   })
+  const [bulkMarketplace, setBulkMarketplace] = useState({
+    enabled: false,
+    name: '',
+    slug: '',
+  })
 
   const mutation = useMutation(({ file, request }: { file: File; request: Omit<CSVUploadRequest, 'file'> }) => 
     uploadCSV(file, request), {
@@ -103,9 +108,21 @@ export function CSVUpload() {
       marketplace_column: columnMapping.marketplace_column || undefined,
     }
 
+    // Determine marketplace info based on bulk mode
+    let finalMarketplaceName: string
+    let finalMarketplaceSlug: string
+
+    if (bulkMarketplace.enabled) {
+      finalMarketplaceName = bulkMarketplace.name
+      finalMarketplaceSlug = bulkMarketplace.slug
+    } else {
+      finalMarketplaceName = marketplaceData.name
+      finalMarketplaceSlug = marketplaceData.slug
+    }
+
     const request: Omit<CSVUploadRequest, 'file'> = {
-      marketplace_name: marketplaceData.name,
-      marketplace_slug: marketplaceData.slug,
+      marketplace_name: finalMarketplaceName,
+      marketplace_slug: finalMarketplaceSlug,
       region: marketplaceData.region || undefined,
       column_mapping: cleanColumnMapping,
       currency_default: defaults.currency,
@@ -117,6 +134,20 @@ export function CSVUpload() {
     if (!cleanColumnMapping.domain_column || !cleanColumnMapping.price_column) {
       alert('Please select Domain and Price columns')
       return
+    }
+
+    // Validate bulk marketplace fields if enabled
+    if (bulkMarketplace.enabled) {
+      if (!bulkMarketplace.name || !bulkMarketplace.slug) {
+        alert('Please fill in both Marketplace Name and Slug for bulk upload')
+        return
+      }
+    } else {
+      // Validate regular marketplace fields if not in bulk mode
+      if (!marketplaceData.name || !marketplaceData.slug) {
+        alert('Please fill in both Marketplace Name and Slug')
+        return
+      }
     }
 
     console.log('Sending request:', request)
@@ -304,10 +335,20 @@ export function CSVUpload() {
                 </label>
                 <select
                   value={columnMapping.marketplace_column}
-                  onChange={(e) => setColumnMapping({ ...columnMapping, marketplace_column: e.target.value })}
+                  onChange={(e) => {
+                    const value = e.target.value
+                    setColumnMapping({ ...columnMapping, marketplace_column: value })
+                    // Enable bulk mode if "bulk" is selected
+                    if (value === 'bulk') {
+                      setBulkMarketplace({ ...bulkMarketplace, enabled: true })
+                    } else {
+                      setBulkMarketplace({ ...bulkMarketplace, enabled: false })
+                    }
+                  }}
                   className="input"
                 >
                   <option value="">Select column (optional)</option>
+                  <option value="bulk">📦 All same marketplace (bulk upload)</option>
                   {csvHeaders.map((header) => (
                     <option key={header} value={header}>
                       {header}
@@ -316,6 +357,47 @@ export function CSVUpload() {
                 </select>
               </div>
             </div>
+
+            {/* Bulk Marketplace Configuration */}
+            {bulkMarketplace.enabled && (
+              <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <h3 className="text-md font-semibold text-blue-900 mb-3">
+                  📦 Bulk Marketplace Configuration
+                </h3>
+                <p className="text-sm text-blue-700 mb-4">
+                  All domains in this CSV will be assigned to the same marketplace. 
+                  This is perfect for bulk uploads where all domains come from the same vendor.
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-blue-900 mb-1">
+                      Marketplace Name *
+                    </label>
+                    <input
+                      type="text"
+                      value={bulkMarketplace.name}
+                      onChange={(e) => setBulkMarketplace({ ...bulkMarketplace, name: e.target.value })}
+                      className="input border-blue-300 focus:border-blue-500 focus:ring-blue-500"
+                      placeholder="e.g., WhitePress"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-blue-900 mb-1">
+                      Marketplace Slug *
+                    </label>
+                    <input
+                      type="text"
+                      value={bulkMarketplace.slug}
+                      onChange={(e) => setBulkMarketplace({ ...bulkMarketplace, slug: e.target.value })}
+                      className="input border-blue-300 focus:border-blue-500 focus:ring-blue-500"
+                      placeholder="e.g., whitepress"
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
