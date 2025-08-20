@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from sqlalchemy.orm import Session
 from typing import Optional
+from decimal import Decimal
 import pandas as pd
 import json
 import time
@@ -129,6 +130,17 @@ async def upload_csv(
                         # If still no rate, set to None (will be handled by frontend)
                         price_usd = None
                 
+                # Debug logging
+                print(f"Row {index + 1}: Amount={price_amount}, Currency={currency}, USD={price_usd}")
+                
+                # Ensure price_amount is properly formatted for database
+                try:
+                    price_amount_decimal = Decimal(str(price_amount))
+                except (ValueError, TypeError):
+                    errors.append(f"Row {index + 1}: Invalid price amount '{price_amount}'")
+                    failed_imports += 1
+                    continue
+                
                 # Get optional fields
                 listing_url = None
                 if upload_request.column_mapping.url_column and upload_request.column_mapping.url_column in df.columns:
@@ -156,7 +168,7 @@ async def upload_csv(
                 if existing_offer:
                     # Update existing offer
                     offer_service.update_offer(existing_offer.id, {
-                        'price_amount': price_amount,
+                        'price_amount': price_amount_decimal,
                         'price_currency': currency,
                         'price_usd': price_usd,
                         'listing_url': listing_url,
@@ -166,17 +178,26 @@ async def upload_csv(
                     updated_offers += 1
                 else:
                     # Create new offer
-                    offer_service.create_offer({
+                    offer_data = {
                         'domain_id': domain_record.id,
                         'marketplace_id': marketplace.id,
                         'listing_url': listing_url,
-                        'price_amount': price_amount,
+                        'price_amount': price_amount_decimal,
                         'price_currency': currency,
                         'price_usd': price_usd,
                         'includes_content': includes_content,
                         'dofollow': dofollow,
-                    })
-                    new_offers += 1
+                    }
+                    print(f"Creating offer with data: {offer_data}")
+                    try:
+                        offer = offer_service.create_offer(offer_data)
+                        print(f"Created offer ID: {offer.id}")
+                        new_offers += 1
+                    except Exception as e:
+                        print(f"Error creating offer: {e}")
+                        errors.append(f"Row {index + 1}: Failed to create offer: {str(e)}")
+                        failed_imports += 1
+                        continue
                 
                 successful_imports += 1
                 
