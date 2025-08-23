@@ -25,7 +25,9 @@ services:
       - "8000:8000"
     environment:
       - DATABASE_URL=postgresql://postgres:password@postgres:5432/backlink_checker
-      - SECRET_KEY=your-secret-key-change-in-production
+      - SECRET_KEY=${SECRET_KEY:-your-secret-key-change-in-production}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-change-this-admin-password}
+      - DEBUG=false
     depends_on:
       postgres:
         condition: service_healthy

@@ -17,11 +17,10 @@ from app.services.fx_service import FXService
 
 router = APIRouter()
 
-# Simple admin authentication - in production, use proper JWT/OAuth
-ADMIN_PASSWORD_HASH = "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"  # "password"
+from app.core.config import settings
 
 def verify_admin_auth(authorization: str = Header(None)):
-    """Simple admin authentication"""
+    """Admin authentication using environment variable"""
     if not authorization:
         raise HTTPException(status_code=401, detail="Admin authorization required")
     
@@ -31,8 +30,8 @@ def verify_admin_auth(authorization: str = Header(None)):
         if scheme.lower() != "bearer":
             raise HTTPException(status_code=401, detail="Invalid authorization scheme")
         
-        password_hash = hashlib.sha256(password.encode()).hexdigest()
-        if password_hash != ADMIN_PASSWORD_HASH:
+        # Use environment variable for admin password
+        if password != settings.admin_password:
             raise HTTPException(status_code=401, detail="Invalid admin password")
     except ValueError:
         raise HTTPException(status_code=401, detail="Invalid authorization format")

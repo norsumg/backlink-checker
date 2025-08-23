@@ -8,9 +8,9 @@ app = FastAPI(
     title=settings.app_name,
     version=settings.version,
     description="A web application that helps users check which guest-post/backlink marketplaces list a domain and at what price.",
-    openapi_url=f"{settings.api_v1_prefix}/openapi.json",
-    docs_url="/docs",
-    redoc_url="/redoc",
+    openapi_url=f"{settings.api_v1_prefix}/openapi.json" if settings.debug else None,
+    docs_url="/docs" if settings.debug else None,
+    redoc_url="/redoc" if settings.debug else None,
 )
 
 # Add CORS middleware

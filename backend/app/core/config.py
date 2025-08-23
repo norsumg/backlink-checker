@@ -13,15 +13,21 @@ class Settings(BaseSettings):
     database_url: str = "sqlite:///./backlink_checker.db"
     
     # Security
-    secret_key: str = "your-secret-key-change-in-production"
+    secret_key: str = os.getenv("SECRET_KEY", "your-secret-key-change-in-production")
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
+    admin_password: str = os.getenv("ADMIN_PASSWORD", "change-this-admin-password")
     
     # API
     api_v1_prefix: str = "/api/v1"
     
     # CORS
-    allowed_origins: list = ["http://localhost:3000", "http://localhost:8000"]
+    allowed_origins: list = [
+        "https://backlinkpricechecker.com",
+        "http://backlinkpricechecker.com",
+        "http://localhost:3000", 
+        "http://localhost:8000"
+    ]
     
     # File upload
     max_file_size: int = 50 * 1024 * 1024  # 50MB
