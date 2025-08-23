@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     debug: bool = False
     
     # Database
-    database_url: str = "sqlite:///./backlink_checker.db"
+    database_url: str = os.getenv("DATABASE_URL", "sqlite:///./backlink_checker.db")
     
     # Security
     secret_key: str = os.getenv("SECRET_KEY", "your-secret-key-change-in-production")
