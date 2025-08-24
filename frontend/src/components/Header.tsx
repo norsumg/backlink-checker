@@ -1,5 +1,7 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Search, Upload, BarChart3, Settings } from 'lucide-react'
+import { Search, Upload, BarChart3, Settings, LogOut, User, ChevronDown } from 'lucide-react'
+import { useAuth } from '../contexts/AuthContext'
+import { useState, useRef, useEffect } from 'react'
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: BarChart3 },
@@ -10,6 +12,26 @@ const navigation = [
 
 export function Header() {
   const location = useLocation()
+  const { user, logout, isAuthenticated } = useAuth()
+  const [showUserMenu, setShowUserMenu] = useState(false)
+  const userMenuRef = useRef<HTMLDivElement>(null)
+
+  // Close user menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setShowUserMenu(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  const handleLogout = () => {
+    logout()
+    setShowUserMenu(false)
+  }
 
   return (
     <header className="bg-white shadow-sm border-b border-gray-200">
@@ -24,25 +46,78 @@ export function Header() {
             </Link>
           </div>
           
-          <nav className="flex space-x-8">
-            {navigation.map((item) => {
-              const isActive = location.pathname === item.href
-              return (
-                <Link
-                  key={item.name}
-                  to={item.href}
-                  className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    isActive
-                      ? 'bg-primary-50 text-primary-700'
-                      : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-                  }`}
+          {isAuthenticated ? (
+            <>
+              <nav className="flex space-x-8">
+                {navigation.map((item) => {
+                  const isActive = location.pathname === item.href
+                  return (
+                    <Link
+                      key={item.name}
+                      to={item.href}
+                      className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                        isActive
+                          ? 'bg-primary-50 text-primary-700'
+                          : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                      }`}
+                    >
+                      <item.icon className="w-4 h-4" />
+                      <span>{item.name}</span>
+                    </Link>
+                  )
+                })}
+              </nav>
+
+              {/* User Menu */}
+              <div className="relative" ref={userMenuRef}>
+                <button
+                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  className="flex items-center space-x-2 text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
                 >
-                  <item.icon className="w-4 h-4" />
-                  <span>{item.name}</span>
-                </Link>
-              )
-            })}
-          </nav>
+                  <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
+                    {user?.avatar_url ? (
+                      <img
+                        src={user.avatar_url}
+                        alt={user.full_name || user.email}
+                        className="w-8 h-8 rounded-full"
+                      />
+                    ) : (
+                      <User className="w-4 h-4 text-primary-600" />
+                    )}
+                  </div>
+                  <span className="text-gray-700 font-medium">
+                    {user?.full_name || user?.username || user?.email?.split('@')[0]}
+                  </span>
+                  <ChevronDown className="w-4 h-4 text-gray-400" />
+                </button>
+
+                {showUserMenu && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
+                    <div className="px-4 py-2 text-sm text-gray-700 border-b border-gray-100">
+                      <div className="font-medium">{user?.full_name || 'User'}</div>
+                      <div className="text-gray-500">{user?.email}</div>
+                    </div>
+                    <button
+                      onClick={handleLogout}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      <span>Sign out</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            </>
+          ) : (
+            <div className="flex space-x-4">
+              <Link
+                to="/auth"
+                className="text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md text-sm font-medium"
+              >
+                Sign in
+              </Link>
+            </div>
+          )}
         </div>
       </div>
     </header>

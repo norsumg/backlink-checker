@@ -36,6 +36,10 @@ class Settings(BaseSettings):
     # External APIs
     exchange_rate_api_url: str = "https://api.exchangerate-api.com/v4/latest/USD"
     
+    # Google OAuth
+    google_client_id: str = os.getenv("GOOGLE_CLIENT_ID", "")
+    google_client_secret: str = os.getenv("GOOGLE_CLIENT_SECRET", "")
+    
     class Config:
         env_file = ".env"
         case_sensitive = True
