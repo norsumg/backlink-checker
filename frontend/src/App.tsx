@@ -35,15 +35,11 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {isAuthenticated && <Header />}
-      <main className={isAuthenticated ? "container mx-auto px-4 py-8" : ""}>
+      <Header />
+      <main className="container mx-auto px-4 py-8">
         <Routes>
           <Route path="/auth" element={<Auth />} />
-          <Route path="/" element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          } />
+          <Route path="/" element={<Dashboard />} />
           <Route path="/lookup" element={
             <ProtectedRoute>
               <DomainLookup />

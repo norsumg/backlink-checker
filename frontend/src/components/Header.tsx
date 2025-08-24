@@ -33,6 +33,14 @@ export function Header() {
     setShowUserMenu(false)
   }
 
+  const handleNavClick = (href: string, e: React.MouseEvent) => {
+    // If trying to access protected routes and not authenticated, redirect to auth
+    if (!isAuthenticated && (href === '/lookup' || href === '/upload' || href === '/admin')) {
+      e.preventDefault()
+      window.location.href = '/auth'
+    }
+  }
+
   return (
     <header className="bg-white shadow-sm border-b border-gray-200">
       <div className="container mx-auto px-4">
@@ -46,73 +54,77 @@ export function Header() {
             </Link>
           </div>
           
-          {isAuthenticated ? (
-            <>
-              <nav className="flex space-x-8">
-                {navigation.map((item) => {
-                  const isActive = location.pathname === item.href
-                  return (
-                    <Link
-                      key={item.name}
-                      to={item.href}
-                      className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                        isActive
-                          ? 'bg-primary-50 text-primary-700'
-                          : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-                      }`}
-                    >
-                      <item.icon className="w-4 h-4" />
-                      <span>{item.name}</span>
-                    </Link>
-                  )
-                })}
-              </nav>
-
-              {/* User Menu */}
-              <div className="relative" ref={userMenuRef}>
-                <button
-                  onClick={() => setShowUserMenu(!showUserMenu)}
-                  className="flex items-center space-x-2 text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+          <nav className="flex space-x-8">
+            {navigation.map((item) => {
+              const isActive = location.pathname === item.href
+              const isProtected = item.href === '/lookup' || item.href === '/upload' || item.href === '/admin'
+              
+              return (
+                <Link
+                  key={item.name}
+                  to={item.href}
+                  onClick={(e) => handleNavClick(item.href, e)}
+                  className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    isActive
+                      ? 'bg-primary-50 text-primary-700'
+                      : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                  } ${isProtected && !isAuthenticated ? 'relative' : ''}`}
                 >
-                  <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
-                    {user?.avatar_url ? (
-                      <img
-                        src={user.avatar_url}
-                        alt={user.full_name || user.email}
-                        className="w-8 h-8 rounded-full"
-                      />
-                    ) : (
-                      <User className="w-4 h-4 text-primary-600" />
-                    )}
-                  </div>
-                  <span className="text-gray-700 font-medium">
-                    {user?.full_name || user?.username || user?.email?.split('@')[0]}
-                  </span>
-                  <ChevronDown className="w-4 h-4 text-gray-400" />
-                </button>
+                  <item.icon className="w-4 h-4" />
+                  <span>{item.name}</span>
+                  {isProtected && !isAuthenticated && (
+                    <span className="text-xs bg-yellow-100 text-yellow-800 px-1 rounded">Login Required</span>
+                  )}
+                </Link>
+              )
+            })}
+          </nav>
 
-                {showUserMenu && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
-                    <div className="px-4 py-2 text-sm text-gray-700 border-b border-gray-100">
-                      <div className="font-medium">{user?.full_name || 'User'}</div>
-                      <div className="text-gray-500">{user?.email}</div>
-                    </div>
-                    <button
-                      onClick={handleLogout}
-                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
-                    >
-                      <LogOut className="w-4 h-4" />
-                      <span>Sign out</span>
-                    </button>
+          {isAuthenticated ? (
+            /* User Menu */
+            <div className="relative" ref={userMenuRef}>
+              <button
+                onClick={() => setShowUserMenu(!showUserMenu)}
+                className="flex items-center space-x-2 text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+              >
+                <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
+                  {user?.avatar_url ? (
+                    <img
+                      src={user.avatar_url}
+                      alt={user.full_name || user.email}
+                      className="w-8 h-8 rounded-full"
+                    />
+                  ) : (
+                    <User className="w-4 h-4 text-primary-600" />
+                  )}
+                </div>
+                <span className="text-gray-700 font-medium">
+                  {user?.full_name || user?.username || user?.email?.split('@')[0]}
+                </span>
+                <ChevronDown className="w-4 h-4 text-gray-400" />
+              </button>
+
+              {showUserMenu && (
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
+                  <div className="px-4 py-2 text-sm text-gray-700 border-b border-gray-100">
+                    <div className="font-medium">{user?.full_name || 'User'}</div>
+                    <div className="text-gray-500">{user?.email}</div>
                   </div>
-                )}
-              </div>
-            </>
+                  <button
+                    onClick={handleLogout}
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    <span>Sign out</span>
+                  </button>
+                </div>
+              )}
+            </div>
           ) : (
             <div className="flex space-x-4">
               <Link
                 to="/auth"
-                className="text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md text-sm font-medium"
+                className="bg-primary-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-primary-700 transition-colors"
               >
                 Sign in
               </Link>

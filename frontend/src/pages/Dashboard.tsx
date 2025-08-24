@@ -1,11 +1,15 @@
 import { useQuery } from 'react-query'
 import { Link } from 'react-router-dom'
-import { Search, Upload, BarChart3, TrendingUp, Globe, DollarSign } from 'lucide-react'
+import { Search, Upload, BarChart3, TrendingUp, Globe, DollarSign, Lock } from 'lucide-react'
 import { getLookupStats } from '../services/api'
 import { Stats } from '../types'
+import { useAuth } from '../contexts/AuthContext'
 
 export function Dashboard() {
-  const { data: stats, isLoading, error } = useQuery<Stats>('stats', getLookupStats)
+  const { isAuthenticated } = useAuth()
+  const { data: stats, isLoading, error } = useQuery<Stats>('stats', getLookupStats, {
+    enabled: isAuthenticated // Only fetch stats if user is authenticated
+  })
 
   const quickActions = [
     {
@@ -56,8 +60,27 @@ export function Dashboard() {
         </p>
       </div>
 
+      {/* Welcome Section for Non-Authenticated Users */}
+      {!isAuthenticated && (
+        <div className="bg-gradient-to-r from-primary-50 to-blue-50 rounded-lg p-8 text-center">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">
+            Welcome to Backlink Price Finder
+          </h2>
+          <p className="text-lg text-gray-600 mb-6 max-w-2xl mx-auto">
+            Discover backlink opportunities across multiple marketplaces. 
+            Compare prices, find domains, and analyze your competition with our comprehensive database.
+          </p>
+          <Link
+            to="/auth"
+            className="bg-primary-600 text-white px-6 py-3 rounded-lg text-lg font-medium hover:bg-primary-700 transition-colors inline-flex items-center space-x-2"
+          >
+            <span>Get Started - Sign Up Free</span>
+          </Link>
+        </div>
+      )}
+
       {/* Stats Grid */}
-      {stats && (
+      {stats && isAuthenticated && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <div className="card">
             <div className="flex items-center">
@@ -122,21 +145,45 @@ export function Dashboard() {
         <h2 className="text-xl font-semibold text-gray-900 mb-4">Quick Actions</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {quickActions.map((action) => (
-            <Link
-              key={action.title}
-              to={action.href}
-              className="card hover:shadow-md transition-shadow cursor-pointer"
-            >
-              <div className="flex items-center">
-                <div className={`flex-shrink-0 w-12 h-12 ${action.color} rounded-lg flex items-center justify-center`}>
-                  <action.icon className="h-6 w-6 text-white" />
+            <div key={action.title} className="relative">
+              {isAuthenticated ? (
+                <Link
+                  to={action.href}
+                  className="card hover:shadow-md transition-shadow cursor-pointer block"
+                >
+                  <div className="flex items-center">
+                    <div className={`flex-shrink-0 w-12 h-12 ${action.color} rounded-lg flex items-center justify-center`}>
+                      <action.icon className="h-6 w-6 text-white" />
+                    </div>
+                    <div className="ml-4">
+                      <h3 className="text-lg font-medium text-gray-900">{action.title}</h3>
+                      <p className="text-gray-600">{action.description}</p>
+                    </div>
+                  </div>
+                </Link>
+              ) : (
+                <div className="card relative">
+                  <div className="flex items-center opacity-60">
+                    <div className={`flex-shrink-0 w-12 h-12 ${action.color} rounded-lg flex items-center justify-center`}>
+                      <action.icon className="h-6 w-6 text-white" />
+                    </div>
+                    <div className="ml-4">
+                      <h3 className="text-lg font-medium text-gray-900">{action.title}</h3>
+                      <p className="text-gray-600">{action.description}</p>
+                    </div>
+                  </div>
+                  <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center rounded-lg">
+                    <Link
+                      to="/auth"
+                      className="bg-primary-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-primary-700 transition-colors flex items-center space-x-2"
+                    >
+                      <Lock className="w-4 h-4" />
+                      <span>Login to Access</span>
+                    </Link>
+                  </div>
                 </div>
-                <div className="ml-4">
-                  <h3 className="text-lg font-medium text-gray-900">{action.title}</h3>
-                  <p className="text-gray-600">{action.description}</p>
-                </div>
-              </div>
-            </Link>
+              )}
+            </div>
           ))}
         </div>
       </div>
