@@ -18,6 +18,15 @@ const api = axios.create({
   },
 })
 
+// Add authentication interceptor to include JWT token in requests
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('auth_token')
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`
+  }
+  return config
+})
+
 // Domain Lookup API
 export const lookupDomains = async (request: DomainLookupRequest): Promise<DomainLookupResponse> => {
   const response = await api.post<DomainLookupResponse>('/lookup/', request)
