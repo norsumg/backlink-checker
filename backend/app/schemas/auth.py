@@ -11,6 +11,7 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     password: Optional[str] = None  # Optional for OAuth users
+    is_admin: bool = False
 
 
 class UserLogin(BaseModel):
@@ -33,6 +34,7 @@ class UserResponse(UserBase):
     id: int
     is_active: bool
     is_verified: bool
+    is_admin: bool = False
     avatar_url: Optional[str] = None
     created_at: datetime
     last_login: Optional[datetime] = None
