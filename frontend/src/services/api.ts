@@ -20,7 +20,7 @@ const api = axios.create({
 
 // Domain Lookup API
 export const lookupDomains = async (request: DomainLookupRequest): Promise<DomainLookupResponse> => {
-  const response = await api.post<DomainLookupResponse>('/lookup', request)
+  const response = await api.post<DomainLookupResponse>('/lookup/', request)
   return response.data
 }
 
