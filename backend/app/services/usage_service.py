@@ -43,7 +43,7 @@ class UsageService:
         remaining = limit - user.searches_used_this_month
         
         if remaining <= 0:
-            return False, f"Monthly search limit reached. Upgrade to continue searching."
+            return False, "Please upgrade your account or wait for credits to refresh"
         
         return True, f"{remaining} searches remaining this month"
     

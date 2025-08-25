@@ -39,7 +39,7 @@ async def lookup_domains(
         raise HTTPException(
             status_code=402,
             detail={
-                "error": "Search limit exceeded",
+                "error": "Free Search Limit Exceeded",
                 "message": message,
                 "upgrade_url": "/pricing",
                 "current_plan": current_user.plan_type,

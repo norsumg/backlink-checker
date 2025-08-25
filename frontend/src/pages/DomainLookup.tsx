@@ -15,15 +15,35 @@ export function DomainLookup() {
     bestPriceOnly: false,
   })
   const [showFilters, setShowFilters] = useState(false)
+  const [error, setError] = useState('')
 
   const mutation = useMutation(lookupDomains, {
-    onError: (error) => {
+    onSuccess: () => {
+      setError('') // Clear any previous errors
+    },
+    onError: (error: any) => {
       console.error('Lookup failed:', error)
+      
+      // Handle structured error responses (like search limit exceeded)
+      if (error?.response?.data?.detail) {
+        const detail = error.response.data.detail
+        if (typeof detail === 'object' && detail.error && detail.message) {
+          // Structured error with header and message
+          setError(`${detail.error}: ${detail.message}`)
+        } else if (typeof detail === 'string') {
+          setError(detail)
+        } else {
+          setError('Search failed. Please try again.')
+        }
+      } else {
+        setError(error?.message || 'Search failed. Please try again.')
+      }
     },
   })
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    setError('') // Clear any previous errors
     
     const domainList = domains
       .split('\n')
@@ -152,19 +172,23 @@ export function DomainLookup() {
               </button>
             )}
           </div>
+
+          {/* Error Message */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <div className="flex items-start">
+                <div className="ml-3">
+                  <div className="text-sm text-red-800">
+                    {error}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </form>
       </div>
 
       {/* Results */}
-      {mutation.isError && (
-        <div className="card bg-red-50 border-red-200">
-          <div className="text-red-800">
-            <h3 className="font-medium">Search failed</h3>
-            <p className="text-sm mt-1">Please try again or check your input.</p>
-          </div>
-        </div>
-      )}
-
       {mutation.data && (
         <div className="space-y-4">
           {/* Results Summary */}
