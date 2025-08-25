@@ -10,5 +10,6 @@ __all__ = [
     "Domain", 
     "Offer",
     "PriceHistory",
-    "FXRate"
+    "FXRate",
+    "User"
 ]
