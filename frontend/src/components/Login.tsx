@@ -4,9 +4,10 @@ import { Eye, EyeOff, Mail, Lock, User, Loader2 } from 'lucide-react';
 
 interface LoginProps {
   onSwitchToRegister: () => void;
+  onSuccess?: () => void;
 }
 
-export const Login: React.FC<LoginProps> = ({ onSwitchToRegister }) => {
+export const Login: React.FC<LoginProps> = ({ onSwitchToRegister, onSuccess }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -22,6 +23,7 @@ export const Login: React.FC<LoginProps> = ({ onSwitchToRegister }) => {
 
     try {
       await login(email, password);
+      onSuccess?.(); // Call onSuccess after successful login
     } catch (err: any) {
       setError(err.message || 'Login failed');
     } finally {
@@ -35,6 +37,7 @@ export const Login: React.FC<LoginProps> = ({ onSwitchToRegister }) => {
 
     try {
       await loginWithGoogle();
+      onSuccess?.(); // Call onSuccess after successful Google login
     } catch (err: any) {
       setError(err.message || 'Google login failed');
     } finally {

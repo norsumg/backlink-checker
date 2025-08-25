@@ -4,9 +4,10 @@ import { Eye, EyeOff, Mail, Lock, User, UserCheck, Loader2 } from 'lucide-react'
 
 interface RegisterProps {
   onSwitchToLogin: () => void;
+  onSuccess?: () => void;
 }
 
-export const Register: React.FC<RegisterProps> = ({ onSwitchToLogin }) => {
+export const Register: React.FC<RegisterProps> = ({ onSwitchToLogin, onSuccess }) => {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -52,6 +53,7 @@ export const Register: React.FC<RegisterProps> = ({ onSwitchToLogin }) => {
         formData.username || undefined, 
         formData.fullName || undefined
       );
+      onSuccess?.(); // Call onSuccess after successful registration
     } catch (err: any) {
       setError(err.message || 'Registration failed');
     } finally {
