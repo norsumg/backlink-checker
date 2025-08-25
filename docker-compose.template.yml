@@ -1,12 +1,15 @@
+version: '3.8'
+
 services:
   postgres:
     image: postgres:15
     environment:
       POSTGRES_DB: backlink_checker
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
-    ports:
-      - "5432:5432"
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-CHANGE_THIS_STRONG_PASSWORD}
+    # SECURITY: Remove public port exposure - database should only be accessible from backend
+    # ports:
+    #   - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -22,7 +25,7 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=postgresql://postgres:password@postgres:5432/backlink_checker
+      - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD:-CHANGE_THIS_STRONG_PASSWORD}@postgres:5432/backlink_checker
       - SECRET_KEY=${SECRET_KEY:-your-secret-key-change-in-production}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD:-change-this-admin-password}
       - DEBUG=false
