@@ -8,7 +8,8 @@ import {
   Stats,
 } from '../types'
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || '/api/v1'
+// Always use relative path to avoid HTTP/HTTPS mixed content issues
+const API_BASE_URL = '/api/v1'
 
 const api = axios.create({
   baseURL: API_BASE_URL,

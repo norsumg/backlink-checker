@@ -1,6 +1,7 @@
 import axios from 'axios'
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || '/api/v1'
+// Always use relative path to avoid HTTP/HTTPS mixed content issues
+const API_BASE_URL = '/api/v1'
 
 class AdminApiService {
   private authToken: string = ''
