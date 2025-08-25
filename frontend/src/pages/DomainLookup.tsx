@@ -5,6 +5,7 @@ import { lookupDomains } from '../services/api'
 import { DomainLookupRequest, OfferResult } from '../types'
 import { ResultsTable } from '../components/ResultsTable'
 import { FilterPanel } from '../components/FilterPanel'
+import { useAuth } from '../contexts/AuthContext'
 
 export function DomainLookup() {
   const [domains, setDomains] = useState('')
@@ -16,25 +17,31 @@ export function DomainLookup() {
   })
   const [showFilters, setShowFilters] = useState(false)
   const [error, setError] = useState('')
+  const { refreshUsage } = useAuth()
 
   const mutation = useMutation(lookupDomains, {
     onSuccess: () => {
       setError('') // Clear any previous errors
+      refreshUsage() // Refresh usage stats after successful search
     },
     onError: (error: any) => {
+      refreshUsage() // Refresh usage stats after failed search too
       console.error('Lookup failed:', error)
       
       // Handle structured error responses (like search limit exceeded)
       if (error?.response?.data?.detail) {
         const detail = error.response.data.detail
         if (typeof detail === 'object' && detail.error && detail.message) {
-          // Structured error with header and message
+          // Structured error with header and message (e.g., search limit exceeded)
           setError(`${detail.error}: ${detail.message}`)
         } else if (typeof detail === 'string') {
           setError(detail)
         } else {
           setError('Search failed. Please try again.')
         }
+      } else if (error?.response?.status === 402) {
+        // Payment required (search limit exceeded)
+        setError('Free Search Limit Exceeded: Please upgrade your account or wait for credits to refresh')
       } else {
         setError(error?.message || 'Search failed. Please try again.')
       }

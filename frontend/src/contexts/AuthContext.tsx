@@ -166,6 +166,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setToken(data.access_token);
       setUser(data.user);
       localStorage.setItem('auth_token', data.access_token);
+      // Fetch usage stats after login
+      await fetchUsageStats(data.access_token);
     } catch (error) {
       throw error;
     }
