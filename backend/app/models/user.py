@@ -16,6 +16,7 @@ class User(Base):
     hashed_password = Column(String(255), nullable=True)  # Null for OAuth users
     is_active = Column(Boolean, default=True)
     is_verified = Column(Boolean, default=False)
+    is_admin = Column(Boolean, default=False)
     
     # OAuth fields
     google_id = Column(String(255), nullable=True, unique=True, index=True)
