@@ -12,7 +12,7 @@ const navigation = [
 
 export function Header() {
   const location = useLocation()
-  const { user, logout, isAuthenticated } = useAuth()
+  const { user, logout, isAuthenticated, usageStats } = useAuth()
   const [showUserMenu, setShowUserMenu] = useState(false)
   const userMenuRef = useRef<HTMLDivElement>(null)
 
@@ -81,44 +81,64 @@ export function Header() {
           </nav>
 
           {isAuthenticated ? (
-            /* User Menu */
-            <div className="relative" ref={userMenuRef}>
-              <button
-                onClick={() => setShowUserMenu(!showUserMenu)}
-                className="flex items-center space-x-2 text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-              >
-                <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
-                  {user?.avatar_url ? (
-                    <img
-                      src={user.avatar_url}
-                      alt={user.full_name || user.email}
-                      className="w-8 h-8 rounded-full"
-                    />
+            <div className="flex items-center space-x-4">
+              {/* Usage Display */}
+              {usageStats && (
+                <div className="text-sm text-gray-600">
+                  {usageStats.plan_type === 'unlimited' ? (
+                    <span className="text-green-600 font-medium">Unlimited</span>
                   ) : (
-                    <User className="w-4 h-4 text-primary-600" />
+                    <span className={usageStats.searches_remaining <= 1 ? 'text-red-600 font-medium' : 'text-gray-600'}>
+                      {usageStats.searches_remaining} searches left
+                    </span>
                   )}
                 </div>
-                <span className="text-gray-700 font-medium">
-                  {user?.full_name || user?.username || user?.email?.split('@')[0]}
-                </span>
-                <ChevronDown className="w-4 h-4 text-gray-400" />
-              </button>
-
-              {showUserMenu && (
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
-                  <div className="px-4 py-2 text-sm text-gray-700 border-b border-gray-100">
-                    <div className="font-medium">{user?.full_name || 'User'}</div>
-                    <div className="text-gray-500">{user?.email}</div>
-                  </div>
-                  <button
-                    onClick={handleLogout}
-                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
-                  >
-                    <LogOut className="w-4 h-4" />
-                    <span>Sign out</span>
-                  </button>
-                </div>
               )}
+
+              {/* User Menu */}
+              <div className="relative" ref={userMenuRef}>
+                <button
+                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  className="flex items-center space-x-2 text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                >
+                  <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
+                    {user?.avatar_url ? (
+                      <img
+                        src={user.avatar_url}
+                        alt={user.full_name || user.email}
+                        className="w-8 h-8 rounded-full"
+                      />
+                    ) : (
+                      <User className="w-4 h-4 text-primary-600" />
+                    )}
+                  </div>
+                  <span className="text-gray-700 font-medium">
+                    {user?.full_name || user?.username || user?.email?.split('@')[0]}
+                  </span>
+                  <ChevronDown className="w-4 h-4 text-gray-400" />
+                </button>
+
+                {showUserMenu && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
+                    <div className="px-4 py-2 text-sm text-gray-700 border-b border-gray-100">
+                      <div className="font-medium">{user?.full_name || 'User'}</div>
+                      <div className="text-gray-500">{user?.email}</div>
+                      {usageStats && (
+                        <div className="text-xs text-gray-400 mt-1">
+                          {usageStats.plan_type === 'unlimited' ? 'Unlimited Plan' : `${usageStats.plan_type} Plan`}
+                        </div>
+                      )}
+                    </div>
+                    <button
+                      onClick={handleLogout}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      <span>Sign out</span>
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           ) : (
             <div className="flex space-x-4">

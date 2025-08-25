@@ -13,16 +13,28 @@ interface User {
   last_login?: string;
 }
 
+interface UsageStats {
+  plan_type: string;
+  searches_used_this_month: number;
+  searches_limit: number;
+  searches_remaining: number;
+  can_search: boolean;
+  last_reset_date: string;
+  total_searches_this_month: number;
+}
+
 interface AuthContextType {
   user: User | null;
   token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  usageStats: UsageStats | null;
   login: (email: string, password: string) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
   register: (email: string, password: string, username?: string, fullName?: string) => Promise<void>;
   logout: () => void;
   refreshUser: () => Promise<void>;
+  refreshUsage: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -43,6 +55,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [usageStats, setUsageStats] = useState<UsageStats | null>(null);
 
   // Initialize Google OAuth
   useEffect(() => {
@@ -103,6 +116,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (response.ok) {
         const userData = await response.json();
         setUser(userData);
+        // Fetch usage stats after getting user
+        await fetchUsageStats(authToken);
       } else {
         throw new Error('Failed to fetch user');
       }
@@ -111,6 +126,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       localStorage.removeItem('auth_token');
       setToken(null);
       setUser(null);
+      setUsageStats(null);
+    }
+  };
+
+  const fetchUsageStats = async (authToken: string) => {
+    try {
+      const response = await fetch('/api/v1/usage/stats', {
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+        },
+      });
+      
+      if (response.ok) {
+        const stats = await response.json();
+        setUsageStats(stats);
+      }
+    } catch (error) {
+      console.error('Error fetching usage stats:', error);
     }
   };
 
@@ -206,6 +239,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const logout = () => {
     setToken(null);
     setUser(null);
+    setUsageStats(null);
     localStorage.removeItem('auth_token');
   };
 
@@ -215,16 +249,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const refreshUsage = async () => {
+    if (token) {
+      await fetchUsageStats(token);
+    }
+  };
+
   const value: AuthContextType = {
     user,
     token,
     isAuthenticated: !!user && !!token,
     isLoading,
+    usageStats,
     login,
     loginWithGoogle,
     register,
     logout,
     refreshUser,
+    refreshUsage,
   };
 
   return (

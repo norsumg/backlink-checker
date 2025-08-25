@@ -9,6 +9,9 @@ from app.schemas.lookup import DomainLookupRequest, DomainLookupResponse, OfferR
 from app.services.domain_service import DomainService
 from app.services.offer_service import OfferService
 from app.services.fx_service import FXService
+from app.api.v1.endpoints.auth import get_current_user
+from app.models.user import User
+from app.services.usage_service import usage_service
 
 router = APIRouter()
 
@@ -16,6 +19,7 @@ router = APIRouter()
 @router.post("/", response_model=DomainLookupResponse)
 async def lookup_domains(
     request: DomainLookupRequest,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
@@ -28,6 +32,20 @@ async def lookup_domains(
     - Marketplace information
     """
     start_time = time.time()
+    
+    # Check if user can perform this search
+    can_search, message = usage_service.can_perform_search(db, current_user)
+    if not can_search:
+        raise HTTPException(
+            status_code=402,
+            detail={
+                "error": "Search limit exceeded",
+                "message": message,
+                "upgrade_url": "/pricing",
+                "current_plan": current_user.plan_type,
+                "searches_used": current_user.searches_used_this_month
+            }
+        )
     
     # Initialize services
     domain_service = DomainService(db)
@@ -107,6 +125,13 @@ async def lookup_domains(
         results = best_price_results
     
     processing_time_ms = int((time.time() - start_time) * 1000)
+    
+    # Record the search usage
+    search_query = f"Searched {len(normalized_domains)} domains: {', '.join(normalized_domains[:3])}"
+    if len(normalized_domains) > 3:
+        search_query += f" and {len(normalized_domains) - 3} more"
+    
+    usage_service.record_search(db, current_user, search_query, len(results))
     
     return DomainLookupResponse(
         results=results,

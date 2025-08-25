@@ -4,18 +4,26 @@ A web application that helps users check which guest-post/backlink marketplaces 
 
 ## Features
 
-- **Marketplace Data Ingestion**: Upload CSV exports from various backlink marketplaces
-- **Domain Lookup**: Check which marketplaces list specific domains and their prices
-- **Price Normalization**: Convert all prices to USD for easy comparison
-- **Best Price Identification**: Automatically flag the cheapest option per domain
-- **CSV Export**: Export results for further analysis
+### For Users
+- **Domain Lookup**: Search our comprehensive database to find domains across marketplaces and their prices
+- **Price Comparison**: See all prices normalized to USD for easy comparison
+- **Usage-Based Access**: Free users get 3 searches per month, paid users get unlimited access
+- **Google OAuth**: Quick sign-in with your Google account
+
+### For Administrators
+- **Marketplace Data Ingestion**: Upload CSV exports from various backlink marketplaces to populate the database
+- **Data Management**: Manage domains, offers, and marketplace information
+- **Analytics**: Track usage statistics and system performance
+
+**Note**: CSV upload functionality is admin-only. Regular users search the existing database - they do not upload their own data.
 
 ## Tech Stack
 
 - **Frontend**: React + TypeScript + Tailwind CSS
 - **Backend**: FastAPI + Python + SQLAlchemy
 - **Database**: PostgreSQL
-- **Authentication**: Basic auth (MVP)
+- **Authentication**: JWT tokens + Google OAuth
+- **Usage Tracking**: Monthly search limits with plan-based access
 
 ## Quick Start
 
