@@ -7,7 +7,7 @@ const navigation = [
   { name: 'Dashboard', href: '/', icon: BarChart3 },
   { name: 'Domain Lookup', href: '/lookup', icon: Search },
   { name: 'Upload CSV', href: '/upload', icon: Upload },
-  { name: 'Admin', href: '/admin', icon: Settings },
+  // Admin is accessible via direct URL /admin but not shown in navigation
 ]
 
 export function Header() {

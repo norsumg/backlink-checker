@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.services.auth_service import auth_service
 from app.schemas.auth import (
-    UserCreate, UserLogin, GoogleAuthRequest, Token, UserResponse
+    UserCreate, UserLogin, GoogleAuthRequest, Token, UserResponse, PasswordReset
 )
 from app.models.user import User
 from datetime import timedelta
@@ -153,3 +153,37 @@ async def refresh_token(current_user: User = Depends(get_current_user)):
         expires_in=auth_service.access_token_expire_minutes * 60,
         user=UserResponse.from_orm(current_user)
     )
+
+
+@router.post("/admin-reset-password")
+async def admin_reset_password(
+    reset_data: PasswordReset,
+    db: Session = Depends(get_db)
+):
+    """
+    Admin endpoint to reset password using a simple token approach.
+    Token format: "admin:{email}" (for admin@test.com, token would be "admin:admin@test.com")
+    """
+    # Simple token validation for admin
+    if not reset_data.token.startswith("admin:"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid reset token"
+        )
+    
+    email = reset_data.token.replace("admin:", "")
+    
+    # Find user by email
+    user = db.query(User).filter(User.email == email).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    
+    # Hash new password and update
+    hashed_password = auth_service.get_password_hash(reset_data.new_password)
+    user.hashed_password = hashed_password
+    db.commit()
+    
+    return {"message": f"Password successfully reset for {email}"}
