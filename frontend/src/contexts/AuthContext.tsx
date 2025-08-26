@@ -11,6 +11,7 @@ interface User {
   avatar_url?: string;
   created_at: string;
   last_login?: string;
+  plan_type?: string;
 }
 
 interface UsageStats {
