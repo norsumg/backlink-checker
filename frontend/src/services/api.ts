@@ -41,7 +41,8 @@ export const getLookupStats = async (): Promise<Stats> => {
 // CSV Upload API
 export const uploadCSV = async (
   file: File,
-  request: Omit<CSVUploadRequest, 'file'>
+  request: Omit<CSVUploadRequest, 'file'>,
+  onUploadProgress?: (progressEvent: { loaded: number; total: number }) => void
 ): Promise<CSVUploadResponse> => {
   const formData = new FormData()
   formData.append('file', file)
@@ -51,6 +52,14 @@ export const uploadCSV = async (
     headers: {
       'Content-Type': 'multipart/form-data',
     },
+    onUploadProgress: onUploadProgress ? (progressEvent) => {
+      if (progressEvent.total) {
+        onUploadProgress({
+          loaded: progressEvent.loaded,
+          total: progressEvent.total
+        })
+      }
+    } : undefined,
   })
   return response.data
 }

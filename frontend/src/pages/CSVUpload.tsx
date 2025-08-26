@@ -10,6 +10,8 @@ export function CSVUpload() {
   const [file, setFile] = useState<File | null>(null)
   const [csvHeaders, setCsvHeaders] = useState<string[]>([])
   const [previewData, setPreviewData] = useState<any[]>([])
+  const [uploadProgress, setUploadProgress] = useState(0)
+  const [isProcessing, setIsProcessing] = useState(false)
   const [marketplaceData, setMarketplaceData] = useState({
     name: '',
     slug: '',
@@ -36,9 +38,17 @@ export function CSVUpload() {
   })
 
   const mutation = useMutation(({ file, request }: { file: File; request: Omit<CSVUploadRequest, 'file'> }) => 
-    uploadCSV(file, request), {
+    uploadCSV(file, request, (progressEvent) => {
+      const percentage = Math.round((progressEvent.loaded / progressEvent.total) * 100)
+      setUploadProgress(percentage)
+      if (percentage === 100) {
+        setIsProcessing(true)
+      }
+    }), {
     onSuccess: (data) => {
       console.log('Upload successful:', data)
+      setIsProcessing(false)
+      setUploadProgress(0)
       // Reset form
       setFile(null)
       setCsvHeaders([])
@@ -46,6 +56,8 @@ export function CSVUpload() {
     },
     onError: (error: any) => {
       console.error('Upload failed:', error)
+      setIsProcessing(false)
+      setUploadProgress(0)
       if (error.response) {
         console.error('Response data:', error.response.data)
         console.error('Response status:', error.response.status)
@@ -151,6 +163,8 @@ export function CSVUpload() {
     }
 
     console.log('Sending request:', request)
+    setUploadProgress(0)
+    setIsProcessing(false)
     mutation.mutate({ file, request })
   }
 
@@ -484,24 +498,61 @@ export function CSVUpload() {
 
         {/* Submit */}
         {file && (
-          <div className="flex items-center space-x-4">
-            <button
-              type="submit"
-              disabled={mutation.isLoading || !marketplaceData.name || !marketplaceData.slug || !columnMapping.domain_column || !columnMapping.price_column}
-              className="btn btn-primary px-6"
-            >
-              {mutation.isLoading ? (
-                <div className="flex items-center space-x-2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  <span>Uploading...</span>
+          <div className="space-y-4">
+            {/* Progress Bar */}
+            {(mutation.isLoading || uploadProgress > 0) && (
+              <div className="card bg-blue-50 border-blue-200">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-blue-900">
+                      {isProcessing ? 'Processing CSV...' : `Uploading... ${uploadProgress}%`}
+                    </span>
+                    {isProcessing && (
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                    )}
+                  </div>
+                  
+                  {/* Progress Bar */}
+                  <div className="w-full bg-blue-200 rounded-full h-2">
+                    <div 
+                      className="bg-blue-600 h-2 rounded-full transition-all duration-300 ease-out"
+                      style={{ 
+                        width: isProcessing ? '100%' : `${uploadProgress}%` 
+                      }}
+                    ></div>
+                  </div>
+                  
+                  {/* Status Text */}
+                  <p className="text-xs text-blue-700">
+                    {isProcessing 
+                      ? 'File uploaded successfully. Processing rows in batches...'
+                      : 'Uploading file to server...'
+                    }
+                  </p>
                 </div>
-              ) : (
-                <div className="flex items-center space-x-2">
-                  <Upload className="w-4 h-4" />
-                  <span>Upload Data</span>
-                </div>
-              )}
-            </button>
+              </div>
+            )}
+            
+            {/* Submit Button */}
+            <div className="flex items-center space-x-4">
+              <button
+                type="submit"
+                disabled={mutation.isLoading || !marketplaceData.name || !marketplaceData.slug || !columnMapping.domain_column || !columnMapping.price_column}
+                className="btn btn-primary px-6"
+              >
+                {mutation.isLoading ? (
+                  <div className="flex items-center space-x-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    <span>{isProcessing ? 'Processing...' : 'Uploading...'}</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center space-x-2">
+                    <Upload className="w-4 h-4" />
+                    <span>Upload Data</span>
+                  </div>
+                )}
+              </button>
+            </div>
           </div>
         )}
 

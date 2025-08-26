@@ -1,0 +1,5 @@
+---
+description: When we have made a succesful change (or before starting a new task following a succesful change) ensure that git has been updated. This allows us to have a checkpoint before editing the code again.
+globs:
+alwaysApply: true
+---

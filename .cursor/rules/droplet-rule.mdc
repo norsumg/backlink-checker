@@ -1,0 +1,5 @@
+---
+description: We are running a digital ocean droplet, so whenever you need to interact with it (e.g. docker-compose logs) you need to tell me to do it. Everything else you can do yourself as normal
+globs:
+alwaysApply: true
+---
