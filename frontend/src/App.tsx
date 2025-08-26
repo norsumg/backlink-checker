@@ -5,6 +5,8 @@ import { CSVUpload } from './pages/CSVUpload'
 import { Dashboard } from './pages/Dashboard'
 import { Admin } from './pages/Admin'
 import { Auth } from './pages/Auth'
+import { Pricing } from './pages/Pricing'
+import { Billing } from './pages/Billing'
 import { useAuth } from './contexts/AuthContext'
 import { Loader2 } from 'lucide-react'
 
@@ -42,6 +44,7 @@ function App() {
         <Routes>
           <Route path="/auth" element={<Auth />} />
           <Route path="/" element={<Dashboard />} />
+          <Route path="/pricing" element={<Pricing />} />
           <Route path="/lookup" element={
             <ProtectedRoute>
               <DomainLookup />
@@ -50,6 +53,11 @@ function App() {
           <Route path="/upload" element={
             <ProtectedRoute>
               <CSVUpload />
+            </ProtectedRoute>
+          } />
+          <Route path="/billing" element={
+            <ProtectedRoute>
+              <Billing />
             </ProtectedRoute>
           } />
           <Route path="/admin" element={

@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Search, Upload, BarChart3, Settings, LogOut, User, ChevronDown } from 'lucide-react'
+import { Search, Upload, BarChart3, Settings, LogOut, User, ChevronDown, Star, CreditCard } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useState, useRef, useEffect } from 'react'
 
@@ -82,6 +82,17 @@ export function Header() {
 
           {isAuthenticated ? (
             <div className="flex items-center space-x-4">
+              {/* Upgrade Button for Free Users */}
+              {usageStats && usageStats.plan_type === 'free' && (
+                <Link
+                  to="/pricing"
+                  className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:from-blue-700 hover:to-purple-700 transition-all flex items-center space-x-1 shadow-sm"
+                >
+                  <Star className="w-4 h-4" />
+                  <span>Upgrade</span>
+                </Link>
+              )}
+
               {/* Usage Display */}
               {usageStats && (
                 <div className="text-sm text-gray-600">
@@ -129,9 +140,34 @@ export function Header() {
                         </div>
                       )}
                     </div>
+                    
+                    {/* Billing link for unlimited users */}
+                    {usageStats && usageStats.plan_type === 'unlimited' && (
+                      <Link
+                        to="/billing"
+                        onClick={() => setShowUserMenu(false)}
+                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
+                      >
+                        <CreditCard className="w-4 h-4" />
+                        <span>Billing</span>
+                      </Link>
+                    )}
+                    
+                    {/* Upgrade link for free users */}
+                    {usageStats && usageStats.plan_type === 'free' && (
+                      <Link
+                        to="/pricing"
+                        onClick={() => setShowUserMenu(false)}
+                        className="w-full text-left px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 flex items-center space-x-2"
+                      >
+                        <Star className="w-4 h-4" />
+                        <span>Upgrade Plan</span>
+                      </Link>
+                    )}
+                    
                     <button
                       onClick={handleLogout}
-                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2 border-t border-gray-100"
                     >
                       <LogOut className="w-4 h-4" />
                       <span>Sign out</span>

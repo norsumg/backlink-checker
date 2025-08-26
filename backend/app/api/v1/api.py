@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.api.v1.endpoints import lookup, ingest, marketplaces, admin, auth, usage
+from app.api.v1.endpoints import lookup, ingest, marketplaces, admin, auth, usage, billing, webhooks
 
 api_router = APIRouter()
 
@@ -10,3 +10,5 @@ api_router.include_router(lookup.router, prefix="/lookup", tags=["lookup"])
 api_router.include_router(ingest.router, prefix="/ingest", tags=["ingest"])
 api_router.include_router(marketplaces.router, prefix="/marketplaces", tags=["marketplaces"])
 api_router.include_router(admin.router, prefix="/admin", tags=["admin"])
+api_router.include_router(billing.router, prefix="/billing", tags=["billing"])
+api_router.include_router(webhooks.router, prefix="/webhooks", tags=["webhooks"])

@@ -31,6 +31,10 @@ services:
       - DEBUG=false
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-your-google-client-id}
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-your-google-client-secret}
+      - STRIPE_PUBLISHABLE_KEY=${STRIPE_PUBLISHABLE_KEY:-pk_test_your_publishable_key_here}
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY:-sk_test_your_secret_key_here}
+      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET:-whsec_your_webhook_secret_here}
+      - STRIPE_PRICE_ID=${STRIPE_PRICE_ID:-price_your_price_id_here}
     depends_on:
       postgres:
         condition: service_healthy

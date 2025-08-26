@@ -34,12 +34,8 @@ class UsageService:
         if user.plan_type == 'unlimited':
             return True, "Unlimited searches available"
         
-        plan_limits = {
-            'free': 3,
-            'pro': 100
-        }
-        
-        limit = plan_limits.get(user.plan_type, 3)
+        # Free plan gets 3 searches, unlimited gets unlimited
+        limit = 3
         remaining = limit - user.searches_used_this_month
         
         if remaining <= 0:
@@ -87,13 +83,10 @@ class UsageService:
         ).scalar() or 0
         
         # Plan limits
-        plan_limits = {
-            'free': 3,
-            'pro': 100,
-            'unlimited': -1
-        }
-        
-        limit = plan_limits.get(user.plan_type, 3)
+        if user.plan_type == 'unlimited':
+            limit = -1
+        else:
+            limit = 3  # Free plan
         
         return {
             'plan_type': user.plan_type,
@@ -108,7 +101,7 @@ class UsageService:
     @staticmethod
     def upgrade_user_plan(db: Session, user: User, new_plan: str) -> User:
         """Upgrade user to a new plan"""
-        valid_plans = ['free', 'pro', 'unlimited']
+        valid_plans = ['free', 'unlimited']
         
         if new_plan not in valid_plans:
             raise ValueError(f"Invalid plan type: {new_plan}")

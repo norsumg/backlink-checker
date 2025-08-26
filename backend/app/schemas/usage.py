@@ -16,7 +16,7 @@ class UsageStats(BaseModel):
 
 
 class PlanUpgrade(BaseModel):
-    plan_type: Literal["free", "pro", "unlimited"]
+    plan_type: Literal["free", "unlimited"]
 
 
 class SearchCheck(BaseModel):

@@ -40,6 +40,12 @@ class Settings(BaseSettings):
     google_client_id: str = os.getenv("GOOGLE_CLIENT_ID", "")
     google_client_secret: str = os.getenv("GOOGLE_CLIENT_SECRET", "")
     
+    # Stripe
+    stripe_publishable_key: str = os.getenv("STRIPE_PUBLISHABLE_KEY", "")
+    stripe_secret_key: str = os.getenv("STRIPE_SECRET_KEY", "")
+    stripe_webhook_secret: str = os.getenv("STRIPE_WEBHOOK_SECRET", "")
+    stripe_price_id: str = os.getenv("STRIPE_PRICE_ID", "")  # prod_SwK6hviTuCVhIy
+    
     class Config:
         env_file = ".env"
         case_sensitive = True

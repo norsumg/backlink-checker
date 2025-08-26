@@ -27,6 +27,13 @@ class User(Base):
     searches_used_this_month = Column(Integer, nullable=False, default=0)
     last_reset_date = Column(Date, nullable=False, server_default=func.current_date())
     
+    # Stripe integration
+    stripe_customer_id = Column(String(255), nullable=True, unique=True, index=True)
+    stripe_subscription_id = Column(String(255), nullable=True, unique=True, index=True)
+    subscription_status = Column(String(50), nullable=True, index=True)
+    subscription_current_period_end = Column(DateTime(timezone=True), nullable=True)
+    subscription_cancel_at_period_end = Column(Boolean, default=False)
+    
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
@@ -44,14 +51,11 @@ class User(Base):
     @property
     def searches_remaining(self) -> int:
         """Calculate remaining searches for the current month"""
-        plan_limits = {
-            'free': 3,
-            'pro': 100,
-            'unlimited': -1  # -1 means unlimited
-        }
-        limit = plan_limits.get(self.plan_type, 3)
-        if limit == -1:
+        if self.plan_type == 'unlimited':
             return 999  # Show as unlimited
+        
+        # Free plan gets 3 searches
+        limit = 3
         return max(0, limit - self.searches_used_this_month)
     
     @property
@@ -59,12 +63,9 @@ class User(Base):
         """Check if user can perform another search"""
         if self.plan_type == 'unlimited':
             return True
-        plan_limits = {
-            'free': 3,
-            'pro': 100
-        }
-        limit = plan_limits.get(self.plan_type, 3)
-        return self.searches_used_this_month < limit
+        
+        # Free plan gets 3 searches
+        return self.searches_used_this_month < 3
     
     def __repr__(self):
         return f"<User(id={self.id}, email='{self.email}', plan='{self.plan_type}')>"
