@@ -86,7 +86,7 @@ export function Header() {
               {usageStats && (
                 <div className="text-sm text-gray-600">
                   {usageStats.plan_type === 'unlimited' ? (
-                    <span className="text-green-600 font-medium">Unlimited</span>
+                    <span className="text-green-600 font-medium">Unlimited Searches</span>
                   ) : (
                     <span className={usageStats.searches_remaining <= 1 ? 'text-red-600 font-medium' : 'text-gray-600'}>
                       {usageStats.searches_remaining} searches left

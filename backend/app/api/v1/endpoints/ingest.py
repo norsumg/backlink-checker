@@ -7,6 +7,7 @@ import json
 import time
 
 from app.core.database import get_db
+from app.core.config import settings
 from app.schemas.csv_upload import CSVUploadRequest, CSVUploadResponse
 from app.services.csv_processing_service import CSVProcessingService
 
@@ -34,6 +35,15 @@ async def upload_csv(
     # Validate file type
     if not file.filename.lower().endswith(('.csv', '.xlsx', '.xls')):
         raise HTTPException(status_code=400, detail="File must be CSV, XLS, or XLSX")
+    
+    # Check file size
+    file_content = await file.read()
+    file_size = len(file_content)
+    if file_size > settings.max_file_size:
+        raise HTTPException(status_code=413, detail=f"File size ({file_size / 1024 / 1024:.1f}MB) exceeds maximum allowed size ({settings.max_file_size / 1024 / 1024:.0f}MB)")
+    
+    # Reset file pointer for processing
+    await file.seek(0)
     
     # Parse request data
     try:

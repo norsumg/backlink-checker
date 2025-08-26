@@ -37,17 +37,43 @@ class CSVProcessingService:
         self.marketplace = self._get_or_create_marketplace()
 
     def process(self) -> Dict[str, Any]:
-        """Main processing method."""
-        print(f"Processing {len(self.df)} rows...")
+        """Main processing method with batch processing for better performance."""
+        total_rows = len(self.df)
+        print(f"Processing {total_rows} rows...")
         
-        for index, row in self.df.iterrows():
+        # Process in batches for better performance and memory management
+        batch_size = 100
+        processed_count = 0
+        
+        for start_idx in range(0, total_rows, batch_size):
+            end_idx = min(start_idx + batch_size, total_rows)
+            batch_df = self.df.iloc[start_idx:end_idx]
+            
+            print(f"Processing batch {start_idx + 1}-{end_idx} of {total_rows}...")
+            
+            for index, row in batch_df.iterrows():
+                try:
+                    self._process_row(index, row)
+                    processed_count += 1
+                    
+                    # Log progress every 1000 rows
+                    if processed_count % 1000 == 0:
+                        print(f"Processed {processed_count}/{total_rows} rows...")
+                        
+                except Exception as e:
+                    error_msg = f"Row {index + 1}: {str(e)}"
+                    print(f"Error processing row {index + 1}: {e}")
+                    self.results['errors'].append(error_msg)
+                    self.results['failed_imports'] += 1
+            
+            # Commit batch to database
             try:
-                self._process_row(index, row)
+                self.db.commit()
+                print(f"Committed batch {start_idx + 1}-{end_idx}")
             except Exception as e:
-                error_msg = f"Row {index + 1}: {str(e)}"
-                print(f"Error processing row {index + 1}: {e}")
-                self.results['errors'].append(error_msg)
-                self.results['failed_imports'] += 1
+                print(f"Error committing batch: {e}")
+                self.db.rollback()
+                raise
         
         print(f"Processing complete. Results: {self.results}")
         return self.results
