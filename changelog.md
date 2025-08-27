@@ -15,12 +15,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Upgrade Prompts**: Smart prompts when users hit their search limits
 - **Webhook Processing**: Automated subscription status updates via Stripe webhooks
 - **Test Mode**: Full Stripe test environment for safe development and testing
+- **Enhanced Admin Panel**: Complete overhaul with search, sorting, and inline editing capabilities
+- **Admin Table Search**: Real-time search across all admin tables (marketplaces, domains, offers, FX rates)
+- **Admin Table Sorting**: Clickable column headers with visual sort indicators
+- **Admin Inline Editing**: Edit marketplace and offer data directly in the table with save/cancel controls
 
 ### 🔧 Changed
 - **User Model**: Added Stripe customer ID, subscription status, and billing fields
 - **Plan System**: Simplified to two tiers - Free (3 searches) and Unlimited (999+ searches)
 - **Header Navigation**: Added upgrade/billing buttons based on user plan status
 - **Environment Management**: Improved docker-compose template structure for secure variable handling
+- **Admin UI/UX**: Modern interface with improved table layouts, action buttons, and visual feedback
+- **Admin Performance**: Client-side filtering and sorting for responsive data management
 
 ### 🐛 Fixed
 - **Admin Plan Display**: Fixed billing page showing "Free Plan" instead of "Unlimited Plan" for admin users
