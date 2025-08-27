@@ -75,6 +75,9 @@ class AuthService:
             return None
         if not self.verify_password(password, user.hashed_password):
             return None
+        
+        # Ensure admin users have unlimited plan
+        user = self.ensure_admin_unlimited_plan(db, user)
         return user
     
     def get_user_by_email(self, db: Session, email: str) -> Optional[User]:
@@ -91,12 +94,17 @@ class AuthService:
         if user_data.password:
             hashed_password = self.get_password_hash(user_data.password)
         
+        # Set plan_type to unlimited for admin users
+        plan_type = 'unlimited' if user_data.is_admin else 'free'
+        
         db_user = User(
             email=user_data.email,
             username=user_data.username,
             full_name=user_data.full_name,
             hashed_password=hashed_password,
-            is_verified=True if not user_data.password else False  # OAuth users are pre-verified
+            is_verified=True if not user_data.password else False,  # OAuth users are pre-verified
+            is_admin=user_data.is_admin,
+            plan_type=plan_type
         )
         
         db.add(db_user)
@@ -137,8 +145,20 @@ class AuthService:
             user.avatar_url = google_user_info.get('picture', user.avatar_url)
         
         user.last_login = datetime.utcnow()
+        
+        # Ensure admin users have unlimited plan
+        user = self.ensure_admin_unlimited_plan(db, user)
+        
         db.commit()
         db.refresh(user)
+        return user
+    
+    def ensure_admin_unlimited_plan(self, db: Session, user: User) -> User:
+        """Ensure admin users have unlimited plan type"""
+        if user.is_admin and user.plan_type != 'unlimited':
+            user.plan_type = 'unlimited'
+            db.commit()
+            db.refresh(user)
         return user
 
 

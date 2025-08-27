@@ -134,8 +134,10 @@ async def google_auth(google_auth: GoogleAuthRequest, db: Session = Depends(get_
 
 
 @router.get("/me", response_model=UserResponse)
-async def get_current_user_info(current_user: User = Depends(get_current_user)):
+async def get_current_user_info(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     """Get current user information"""
+    # Ensure admin users have unlimited plan
+    current_user = auth_service.ensure_admin_unlimited_plan(db, current_user)
     return UserResponse.from_orm(current_user)
 
 

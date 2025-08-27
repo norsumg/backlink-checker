@@ -8,7 +8,8 @@ A comprehensive web application that helps users discover which guest-post/backl
 - **🔍 Advanced Domain Lookup**: Search across multiple marketplaces simultaneously
 - **💱 Multi-Currency Support**: Automatic price conversion with real-time exchange rates
 - **📊 Price Comparison**: Side-by-side marketplace pricing with USD normalization
-- **📈 Usage Tracking**: Plan-based access with monthly search limits
+- **💳 Flexible Billing**: Free plan (3 searches/month) + Unlimited plan ($4.99/month)
+- **🏪 Subscription Management**: Stripe-powered billing with customer portal
 - **🔐 Secure Authentication**: Google OAuth + traditional email/password login
 - **📱 Responsive Design**: Optimized for desktop, tablet, and mobile
 
@@ -28,6 +29,20 @@ A comprehensive web application that helps users discover which guest-post/backl
 
 **Note**: CSV upload functionality is admin-only. Regular users search the existing database.
 
+## 💳 Billing Plans
+
+### Free Plan
+- **3 domain searches per month**
+- Access to complete marketplace database
+- Basic support
+
+### Unlimited Plan - $4.99/month
+- **Unlimited domain searches**
+- Access to complete marketplace database  
+- Priority support
+- Advanced filtering options
+- Stripe-powered billing with easy cancellation
+
 ## 🛠️ Tech Stack
 
 ### Frontend
@@ -44,6 +59,7 @@ A comprehensive web application that helps users discover which guest-post/backl
 - **Pandas** for CSV processing
 - **JWT** for secure authentication
 - **Google OAuth** integration
+- **Stripe** for payment processing and subscription management
 
 ### Database & Infrastructure
 - **PostgreSQL 15** for production data storage

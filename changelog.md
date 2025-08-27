@@ -5,6 +5,35 @@ All notable changes to the Backlink Price Finder project will be documented in t
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0] - 2025-08-27
+
+### 🚀 Added
+- **Stripe Payment Integration**: Complete billing system with monthly unlimited plan ($4.99/month)
+- **Subscription Management**: Stripe Customer Portal for users to manage subscriptions
+- **Usage Tracking**: Enhanced plan-based search limits (3 for free, unlimited for paid)
+- **Billing Dashboard**: New billing page for subscription status and management
+- **Upgrade Prompts**: Smart prompts when users hit their search limits
+- **Webhook Processing**: Automated subscription status updates via Stripe webhooks
+- **Test Mode**: Full Stripe test environment for safe development and testing
+
+### 🔧 Changed
+- **User Model**: Added Stripe customer ID, subscription status, and billing fields
+- **Plan System**: Simplified to two tiers - Free (3 searches) and Unlimited (999+ searches)
+- **Header Navigation**: Added upgrade/billing buttons based on user plan status
+- **Environment Management**: Improved docker-compose template structure for secure variable handling
+
+### 🐛 Fixed
+- **Admin Plan Display**: Fixed billing page showing "Free Plan" instead of "Unlimited Plan" for admin users
+- **Admin User Access**: Ensured admin users automatically get unlimited plan type in database
+- **Environment Variable Loading**: Resolved Stripe configuration not loading in Docker containers
+- **Database Connection**: Fixed PostgreSQL authentication issues during container restarts
+- **Template Structure**: Restored proper docker-compose template pattern for maintainability
+- **Variable Conflicts**: Cleaned up duplicate environment variables in .env files
+
+### 📚 Documentation
+- **STRIPE_SETUP.md**: Complete guide for configuring Stripe integration
+- **Environment Setup**: Updated documentation for proper .env file management
+
 ## [2.1.0] - 2025-01-26
 
 ### 🚀 Added

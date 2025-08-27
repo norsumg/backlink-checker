@@ -38,6 +38,7 @@ class UserResponse(UserBase):
     avatar_url: Optional[str] = None
     created_at: datetime
     last_login: Optional[datetime] = None
+    plan_type: Optional[str] = None
     
     class Config:
         from_attributes = True
