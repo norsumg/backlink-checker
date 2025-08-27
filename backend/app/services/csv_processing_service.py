@@ -115,8 +115,13 @@ class CSVProcessingService:
             domain_raw = str(row[self.request.column_mapping.domain_column]).strip()
             price_raw = row[self.request.column_mapping.price_column]
             
-            # Skip empty rows
+            # Skip empty rows or rows with zero/empty prices
             if not domain_raw or pd.isna(price_raw):
+                return {"is_valid": False}
+            
+            # Check for empty string or zero price values
+            price_str = str(price_raw).strip()
+            if price_str == '' or price_str == '0' or price_str == '0.0' or price_str == '0.00':
                 return {"is_valid": False}
             
             # Normalize domain
@@ -129,6 +134,11 @@ class CSVProcessingService:
             try:
                 price_amount = float(price_raw)
                 price_amount_decimal = Decimal(str(price_amount))
+                
+                # Skip rows with zero or negative prices
+                if price_amount <= 0:
+                    return {"is_valid": False}
+                    
             except (ValueError, TypeError):
                 self.results['errors'].append(f"Row {index + 1}: Invalid price '{price_raw}'")
                 return {"is_valid": False}
