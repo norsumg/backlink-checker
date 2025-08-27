@@ -178,6 +178,37 @@ export function Admin() {
     }
   )
 
+  // Helper functions - MUST be before useMemo hooks
+  const sortData = (data: any[], key: string, direction: 'asc' | 'desc') => {
+    return [...data].sort((a, b) => {
+      const aVal = a[key]
+      const bVal = b[key]
+      
+      if (typeof aVal === 'number' && typeof bVal === 'number') {
+        return direction === 'asc' ? aVal - bVal : bVal - aVal
+      }
+      
+      if (aVal instanceof Date && bVal instanceof Date) {
+        return direction === 'asc' 
+          ? aVal.getTime() - bVal.getTime()
+          : bVal.getTime() - aVal.getTime()
+      }
+      
+      const aStr = String(aVal || '').toLowerCase()
+      const bStr = String(bVal || '').toLowerCase()
+      return direction === 'asc' ? aStr.localeCompare(bStr) : bStr.localeCompare(aStr)
+    })
+  }
+
+  const filterData = (data: any[], searchTerm: string) => {
+    if (!searchTerm) return data
+    return data.filter(item => 
+      Object.values(item).some(value => 
+        String(value || '').toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    )
+  }
+
   // Processed data with search and sort - MUST be before early return
   const processedMarketplaces = useMemo(() => {
     if (!marketplacesQuery.data) return []
@@ -288,36 +319,6 @@ export function Admin() {
       key,
       direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc'
     }))
-  }
-
-  const sortData = (data: any[], key: string, direction: 'asc' | 'desc') => {
-    return [...data].sort((a, b) => {
-      const aVal = a[key]
-      const bVal = b[key]
-      
-      if (typeof aVal === 'number' && typeof bVal === 'number') {
-        return direction === 'asc' ? aVal - bVal : bVal - aVal
-      }
-      
-      if (aVal instanceof Date && bVal instanceof Date) {
-        return direction === 'asc' 
-          ? aVal.getTime() - bVal.getTime()
-          : bVal.getTime() - aVal.getTime()
-      }
-      
-      const aStr = String(aVal || '').toLowerCase()
-      const bStr = String(bVal || '').toLowerCase()
-      return direction === 'asc' ? aStr.localeCompare(bStr) : bStr.localeCompare(aStr)
-    })
-  }
-
-  const filterData = (data: any[], searchTerm: string) => {
-    if (!searchTerm) return data
-    return data.filter(item => 
-      Object.values(item).some(value => 
-        String(value || '').toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    )
   }
 
   // Edit functionality
