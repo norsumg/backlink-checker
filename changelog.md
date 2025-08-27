@@ -15,10 +15,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Upgrade Prompts**: Smart prompts when users hit their search limits
 - **Webhook Processing**: Automated subscription status updates via Stripe webhooks
 - **Test Mode**: Full Stripe test environment for safe development and testing
-- **Enhanced Admin Panel**: Complete overhaul with search, sorting, and inline editing capabilities
-- **Admin Table Search**: Real-time search across all admin tables (marketplaces, domains, offers, FX rates)
-- **Admin Table Sorting**: Clickable column headers with visual sort indicators
+- **Enhanced Admin Panel**: Complete overhaul with server-side search, sorting, and inline editing capabilities
+- **Database-Wide Admin Search**: Real-time search across the entire database (121k+ records), not just loaded data
+- **Server-Side Admin Sorting**: Efficient database-level sorting with visual indicators for all admin tables
 - **Admin Inline Editing**: Edit marketplace and offer data directly in the table with save/cancel controls
+- **CSV Upload Validation**: Enhanced validation to prevent zero-price entries from affecting price statistics
+- **Zero-Price Cleanup Tools**: Admin endpoints to identify and remove invalid zero-price offers
 
 ### 🔧 Changed
 - **User Model**: Added Stripe customer ID, subscription status, and billing fields
@@ -26,11 +28,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Header Navigation**: Added upgrade/billing buttons based on user plan status
 - **Environment Management**: Improved docker-compose template structure for secure variable handling
 - **Admin UI/UX**: Modern interface with improved table layouts, action buttons, and visual feedback
-- **Admin Performance**: Client-side filtering and sorting for responsive data management
+- **Admin Performance**: Server-side database search and sorting for true scalability (no more 100-record limits)
 
 ### 🐛 Fixed
 - **Admin Plan Display**: Fixed billing page showing "Free Plan" instead of "Unlimited Plan" for admin users
 - **Admin User Access**: Ensured admin users automatically get unlimited plan type in database
+- **Homepage Price Statistics**: Fixed "Minimum: $0" issue by preventing zero-price entries in CSV uploads
+- **React Hooks Error**: Fixed critical Error #310 that caused admin page crashes due to conditional hook usage
 - **Environment Variable Loading**: Resolved Stripe configuration not loading in Docker containers
 - **Database Connection**: Fixed PostgreSQL authentication issues during container restarts
 - **Template Structure**: Restored proper docker-compose template pattern for maintainability

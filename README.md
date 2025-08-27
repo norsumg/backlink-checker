@@ -16,14 +16,19 @@ A comprehensive web application that helps users discover which guest-post/backl
 ### 🛠️ For Administrators
 - **📤 Bulk CSV Upload**: Large file support (up to 50MB) with real-time progress tracking
 - **⚡ Batch Processing**: Efficient handling of 10k+ row uploads with progress indicators
-- **🏪 Marketplace Management**: Add/edit marketplace configurations
-- **💹 FX Rate Management**: Real-time currency conversion setup
+- **🔍 Database-Wide Search**: Search across entire database (121k+ records) with real-time results
+- **📊 Server-Side Sorting**: Efficient database-level sorting for all admin tables
+- **✏️ Inline Editing**: Edit marketplace and offer data directly in tables
+- **🏪 Marketplace Management**: Add/edit marketplace configurations with search and sort
+- **💹 FX Rate Management**: Real-time currency conversion setup with advanced filtering
 - **📊 Advanced Analytics**: User activity, search patterns, and system metrics
 - **👨‍💼 User Management**: Admin controls for user access and permissions
+- **🧹 Data Quality Tools**: Identify and clean up invalid entries (e.g., zero-price offers)
 
 ### 🔧 Technical Features
 - **🐳 Production-Ready Docker Setup**: Full containerization with nginx, SSL
 - **⚡ High Performance**: Multi-worker backend, optimized database queries
+- **🔍 True Database Search**: Server-side search/sort handles millions of records efficiently
 - **🔒 Enterprise Security**: JWT tokens, input validation, rate limiting
 - **📈 Scalable Architecture**: Microservices-ready with clear separation of concerns
 
