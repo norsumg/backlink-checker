@@ -816,27 +816,26 @@ export function Admin() {
               
               <SearchInput
                 placeholder="Search domains..."
-                value={searchTerms.domains}
-                onChange={(value) => handleSearch('domains', value)}
+                table="domains"
                 totalCount={domainsQuery.data?.total || 0}
-                filteredCount={processedDomains.length}
+                isLoading={domainsQuery.isLoading}
               />
               
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <SortableHeader label="Domain" sortKey="root_domain" />
-                      <SortableHeader label="eTLD+1" sortKey="etld1" />
-                      <SortableHeader label="Offers" sortKey="offer_count" />
-                      <SortableHeader label="Created" sortKey="created_at" />
+                      <SortableHeader label="Domain" sortKey="root_domain" table="domains" />
+                      <SortableHeader label="eTLD+1" sortKey="etld1" table="domains" />
+                      <SortableHeader label="Offers" sortKey="offer_count" table="domains" />
+                      <SortableHeader label="Created" sortKey="created_at" table="domains" />
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Actions
                       </th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {processedDomains.map((domain: any) => (
+                    {domainsQuery.data?.domains?.map((domain: any) => (
                       <tr key={domain.id}>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                           {domain.root_domain}
@@ -878,30 +877,29 @@ export function Admin() {
               
               <SearchInput
                 placeholder="Search offers..."
-                value={searchTerms.offers}
-                onChange={(value) => handleSearch('offers', value)}
+                table="offers"
                 totalCount={offersQuery.data?.total || 0}
-                filteredCount={processedOffers.length}
+                isLoading={offersQuery.isLoading}
               />
               
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <SortableHeader label="Domain" sortKey="domain" />
-                      <SortableHeader label="Marketplace" sortKey="marketplace" />
-                      <SortableHeader label="Price Amount" sortKey="price_amount" />
-                      <SortableHeader label="Currency" sortKey="price_currency" />
-                      <SortableHeader label="Price USD" sortKey="price_usd" />
-                      <SortableHeader label="Content" sortKey="includes_content" />
-                      <SortableHeader label="Dofollow" sortKey="dofollow" />
+                      <SortableHeader label="Domain" sortKey="domain" table="offers" />
+                      <SortableHeader label="Marketplace" sortKey="marketplace" table="offers" />
+                      <SortableHeader label="Price Amount" sortKey="price_amount" table="offers" />
+                      <SortableHeader label="Currency" sortKey="price_currency" table="offers" />
+                      <SortableHeader label="Price USD" sortKey="price_usd" table="offers" />
+                      <SortableHeader label="Content" sortKey="includes_content" table="offers" />
+                      <SortableHeader label="Dofollow" sortKey="dofollow" table="offers" />
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Actions
                       </th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {processedOffers.map((offer: any) => {
+                    {offersQuery.data?.offers?.map((offer: any) => {
                       const isEditing = editingRows.has(offer.id)
                       const editingData = editData[offer.id] || offer
                       
@@ -1008,27 +1006,26 @@ export function Admin() {
               
               <SearchInput
                 placeholder="Search FX rates..."
-                value={searchTerms.fx_rates}
-                onChange={(value) => handleSearch('fx_rates', value)}
+                table="fx_rates"
                 totalCount={fxRatesQuery.data?.total || 0}
-                filteredCount={processedFxRates.length}
+                isLoading={fxRatesQuery.isLoading}
               />
               
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <SortableHeader label="Currency" sortKey="currency" />
-                      <SortableHeader label="Rate to USD" sortKey="rate_to_usd" />
-                      <SortableHeader label="Date" sortKey="date" />
-                      <SortableHeader label="Created" sortKey="created_at" />
+                      <SortableHeader label="Currency" sortKey="currency" table="fx_rates" />
+                      <SortableHeader label="Rate to USD" sortKey="rate_to_usd" table="fx_rates" />
+                      <SortableHeader label="Date" sortKey="date" table="fx_rates" />
+                      <SortableHeader label="Created" sortKey="created_at" table="fx_rates" />
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Actions
                       </th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {processedFxRates.map((rate: any) => (
+                    {fxRatesQuery.data?.fx_rates?.map((rate: any) => (
                       <tr key={rate.id}>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                           {rate.currency}
