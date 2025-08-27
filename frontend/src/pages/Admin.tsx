@@ -178,6 +178,31 @@ export function Admin() {
     }
   )
 
+  // Processed data with search and sort - MUST be before early return
+  const processedMarketplaces = useMemo(() => {
+    if (!marketplacesQuery.data) return []
+    const filtered = filterData(marketplacesQuery.data, searchTerms.marketplaces)
+    return sortConfig.key ? sortData(filtered, sortConfig.key, sortConfig.direction) : filtered
+  }, [marketplacesQuery.data, searchTerms.marketplaces, sortConfig.key, sortConfig.direction])
+
+  const processedDomains = useMemo(() => {
+    if (!domainsQuery.data?.domains) return []
+    const filtered = filterData(domainsQuery.data.domains, searchTerms.domains)
+    return sortConfig.key ? sortData(filtered, sortConfig.key, sortConfig.direction) : filtered
+  }, [domainsQuery.data?.domains, searchTerms.domains, sortConfig.key, sortConfig.direction])
+
+  const processedOffers = useMemo(() => {
+    if (!offersQuery.data?.offers) return []
+    const filtered = filterData(offersQuery.data.offers, searchTerms.offers)
+    return sortConfig.key ? sortData(filtered, sortConfig.key, sortConfig.direction) : filtered
+  }, [offersQuery.data?.offers, searchTerms.offers, sortConfig.key, sortConfig.direction])
+
+  const processedFxRates = useMemo(() => {
+    if (!fxRatesQuery.data?.fx_rates) return []
+    const filtered = filterData(fxRatesQuery.data.fx_rates, searchTerms.fx_rates)
+    return sortConfig.key ? sortData(filtered, sortConfig.key, sortConfig.direction) : filtered
+  }, [fxRatesQuery.data?.fx_rates, searchTerms.fx_rates, sortConfig.key, sortConfig.direction])
+
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -347,31 +372,6 @@ export function Admin() {
       })
     }
   }
-
-  // Processed data with search and sort
-  const processedMarketplaces = useMemo(() => {
-    if (!marketplacesQuery.data) return []
-    const filtered = filterData(marketplacesQuery.data, searchTerms.marketplaces)
-    return sortConfig.key ? sortData(filtered, sortConfig.key, sortConfig.direction) : filtered
-  }, [marketplacesQuery.data, searchTerms.marketplaces, sortConfig.key, sortConfig.direction])
-
-  const processedDomains = useMemo(() => {
-    if (!domainsQuery.data?.domains) return []
-    const filtered = filterData(domainsQuery.data.domains, searchTerms.domains)
-    return sortConfig.key ? sortData(filtered, sortConfig.key, sortConfig.direction) : filtered
-  }, [domainsQuery.data?.domains, searchTerms.domains, sortConfig.key, sortConfig.direction])
-
-  const processedOffers = useMemo(() => {
-    if (!offersQuery.data?.offers) return []
-    const filtered = filterData(offersQuery.data.offers, searchTerms.offers)
-    return sortConfig.key ? sortData(filtered, sortConfig.key, sortConfig.direction) : filtered
-  }, [offersQuery.data?.offers, searchTerms.offers, sortConfig.key, sortConfig.direction])
-
-  const processedFxRates = useMemo(() => {
-    if (!fxRatesQuery.data?.fx_rates) return []
-    const filtered = filterData(fxRatesQuery.data.fx_rates, searchTerms.fx_rates)
-    return sortConfig.key ? sortData(filtered, sortConfig.key, sortConfig.direction) : filtered
-  }, [fxRatesQuery.data?.fx_rates, searchTerms.fx_rates, sortConfig.key, sortConfig.direction])
 
   // Reusable components
   const SortableHeader = ({ 
