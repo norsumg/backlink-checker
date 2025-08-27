@@ -184,3 +184,43 @@ class OfferService:
                 Offer.marketplace_id == marketplace_id
             )
         ).first()
+    
+    def count_zero_price_offers(self) -> int:
+        """Count offers with zero or null price_usd."""
+        return self.db.query(Offer).filter(
+            or_(
+                Offer.price_usd == 0,
+                Offer.price_usd.is_(None)
+            )
+        ).count()
+    
+    def get_zero_price_offers(self, limit: int = 50) -> List[Offer]:
+        """Get offers with zero or null price_usd for inspection."""
+        return self.db.query(Offer).options(
+            joinedload(Offer.domain),
+            joinedload(Offer.marketplace)
+        ).filter(
+            or_(
+                Offer.price_usd == 0,
+                Offer.price_usd.is_(None)
+            )
+        ).limit(limit).all()
+    
+    def delete_zero_price_offers(self) -> int:
+        """Delete all offers with zero or null price_usd."""
+        deleted_count = self.db.query(Offer).filter(
+            or_(
+                Offer.price_usd == 0,
+                Offer.price_usd.is_(None)
+            )
+        ).count()
+        
+        self.db.query(Offer).filter(
+            or_(
+                Offer.price_usd == 0,
+                Offer.price_usd.is_(None)
+            )
+        ).delete()
+        
+        self.db.commit()
+        return deleted_count

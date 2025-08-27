@@ -198,6 +198,57 @@ async def admin_get_offers(
         "offset": offset
     }
 
+@router.get("/offers/zero-price")
+async def admin_get_zero_price_offers(
+    limit: int = 50,
+    db: Session = Depends(get_db),
+    _: None = Depends(verify_admin_auth)
+):
+    """Admin: Get offers with zero or null price_usd for inspection"""
+    offer_service = OfferService(db)
+    count = offer_service.count_zero_price_offers()
+    offers = offer_service.get_zero_price_offers(limit)
+    
+    return {
+        "total_zero_price_offers": count,
+        "sample_offers": [
+            {
+                "id": o.id,
+                "domain": o.domain.root_domain,
+                "marketplace": o.marketplace.name,
+                "price_amount": float(o.price_amount) if o.price_amount else 0,
+                "price_currency": o.price_currency,
+                "price_usd": float(o.price_usd) if o.price_usd else None,
+                "first_seen_at": o.first_seen_at,
+                "last_seen_at": o.last_seen_at
+            }
+            for o in offers
+        ],
+        "limit": limit,
+        "message": f"Found {count} offers with zero or null USD prices"
+    }
+
+@router.delete("/offers/zero-price")
+async def admin_delete_zero_price_offers(
+    confirm: bool = False,
+    db: Session = Depends(get_db),
+    _: None = Depends(verify_admin_auth)
+):
+    """Admin: Delete all offers with zero or null price_usd"""
+    if not confirm:
+        return {
+            "error": "This action requires confirmation",
+            "message": "Add ?confirm=true to the URL to confirm deletion of zero-price offers"
+        }
+    
+    offer_service = OfferService(db)
+    deleted_count = offer_service.delete_zero_price_offers()
+    
+    return {
+        "message": f"Successfully deleted {deleted_count} offers with zero or null USD prices",
+        "deleted_count": deleted_count
+    }
+
 @router.delete("/offers/{offer_id}")
 async def admin_delete_offer(
     offer_id: int,
