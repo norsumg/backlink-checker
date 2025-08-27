@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Header
 from sqlalchemy.orm import Session, joinedload
+from sqlalchemy import or_, func
 from typing import List, Optional
 import hashlib
 import os
@@ -37,27 +38,66 @@ def verify_admin_auth(authorization: str = Header(None)):
         raise HTTPException(status_code=401, detail="Invalid authorization format")
 
 # Marketplace Admin Endpoints
-@router.get("/marketplaces", response_model=List[MarketplaceResponse])
+@router.get("/marketplaces")
 async def admin_get_marketplaces(
+    limit: int = 100,
+    offset: int = 0,
+    search: Optional[str] = None,
+    sort_by: Optional[str] = None,
+    sort_order: Optional[str] = "asc",
     db: Session = Depends(get_db),
     _: None = Depends(verify_admin_auth)
 ):
-    """Admin: Get all marketplaces with full details"""
-    marketplace_service = MarketplaceService(db)
-    marketplaces = marketplace_service.get_all_marketplaces()
+    """Admin: Get marketplaces with search, sort, and pagination"""
+    # Build base query
+    query = db.query(Marketplace)
     
-    return [
-        MarketplaceResponse(
-            id=m.id,
-            name=m.name,
-            slug=m.slug,
-            region=m.region,
-            notes=m.notes,
-            created_at=m.created_at,
-            updated_at=m.updated_at
+    # Apply search filter
+    if search:
+        search_term = f"%{search.lower()}%"
+        query = query.filter(
+            or_(
+                Marketplace.name.ilike(search_term),
+                Marketplace.slug.ilike(search_term),
+                Marketplace.region.ilike(search_term)
+            )
         )
-        for m in marketplaces
-    ]
+    
+    # Apply sorting
+    if sort_by:
+        if hasattr(Marketplace, sort_by):
+            column = getattr(Marketplace, sort_by)
+            if sort_order.lower() == "desc":
+                query = query.order_by(column.desc())
+            else:
+                query = query.order_by(column.asc())
+    else:
+        # Default sort by name
+        query = query.order_by(Marketplace.name.asc())
+    
+    # Get total count before pagination
+    total = query.count()
+    
+    # Apply pagination
+    marketplaces = query.offset(offset).limit(limit).all()
+    
+    return {
+        "marketplaces": [
+            {
+                "id": m.id,
+                "name": m.name,
+                "slug": m.slug,
+                "region": m.region,
+                "notes": m.notes,
+                "created_at": m.created_at,
+                "updated_at": m.updated_at
+            }
+            for m in marketplaces
+        ],
+        "total": total,
+        "limit": limit,
+        "offset": offset
+    }
 
 @router.delete("/marketplaces/{marketplace_id}")
 async def admin_delete_marketplace(
@@ -109,24 +149,64 @@ async def admin_update_marketplace(
 async def admin_get_domains(
     limit: int = 100,
     offset: int = 0,
+    search: Optional[str] = None,
+    sort_by: Optional[str] = None,
+    sort_order: Optional[str] = "asc",
     db: Session = Depends(get_db),
     _: None = Depends(verify_admin_auth)
 ):
-    """Admin: Get all domains with pagination"""
-    domains = db.query(Domain).offset(offset).limit(limit).all()
-    total = db.query(Domain).count()
+    """Admin: Get domains with search, sort, and pagination"""
+    # Build base query with offer count
+    query = db.query(
+        Domain,
+        func.count(Offer.id).label('offer_count')
+    ).outerjoin(Offer).group_by(Domain.id)
+    
+    # Apply search filter
+    if search:
+        search_term = f"%{search.lower()}%"
+        query = query.filter(
+            or_(
+                Domain.root_domain.ilike(search_term),
+                Domain.etld1.ilike(search_term)
+            )
+        )
+    
+    # Apply sorting
+    if sort_by:
+        if sort_by == "offer_count":
+            # Sort by the computed offer count
+            if sort_order.lower() == "desc":
+                query = query.order_by(func.count(Offer.id).desc())
+            else:
+                query = query.order_by(func.count(Offer.id).asc())
+        elif hasattr(Domain, sort_by):
+            column = getattr(Domain, sort_by)
+            if sort_order.lower() == "desc":
+                query = query.order_by(column.desc())
+            else:
+                query = query.order_by(column.asc())
+    else:
+        # Default sort by root_domain
+        query = query.order_by(Domain.root_domain.asc())
+    
+    # Get total count before pagination
+    total = query.count()
+    
+    # Apply pagination
+    results = query.offset(offset).limit(limit).all()
     
     return {
         "domains": [
             {
-                "id": d.id,
-                "root_domain": d.root_domain,
-                "etld1": d.etld1,
-                "created_at": d.created_at,
-                "updated_at": d.updated_at,
-                "offer_count": len(d.offers) if hasattr(d, 'offers') else 0
+                "id": d.Domain.id,
+                "root_domain": d.Domain.root_domain,
+                "etld1": d.Domain.etld1,
+                "created_at": d.Domain.created_at,
+                "updated_at": d.Domain.updated_at,
+                "offer_count": d.offer_count
             }
-            for d in domains
+            for d in results
         ],
         "total": total,
         "limit": limit,
@@ -156,24 +236,69 @@ async def admin_delete_domain(
 async def admin_get_offers(
     limit: int = 100,
     offset: int = 0,
+    search: Optional[str] = None,
+    sort_by: Optional[str] = None,
+    sort_order: Optional[str] = "asc",
     domain_id: Optional[int] = None,
     marketplace_id: Optional[int] = None,
     db: Session = Depends(get_db),
     _: None = Depends(verify_admin_auth)
 ):
-    """Admin: Get all offers with pagination and filters"""
+    """Admin: Get offers with search, sort, and pagination"""
     query = db.query(Offer).options(
         joinedload(Offer.domain),
         joinedload(Offer.marketplace)
     )
     
+    # Apply existing filters
     if domain_id:
         query = query.filter(Offer.domain_id == domain_id)
     if marketplace_id:
         query = query.filter(Offer.marketplace_id == marketplace_id)
     
-    offers = query.offset(offset).limit(limit).all()
+    # Apply search filter
+    if search:
+        search_term = f"%{search.lower()}%"
+        query = query.join(Domain).join(Marketplace).filter(
+            or_(
+                Domain.root_domain.ilike(search_term),
+                Marketplace.name.ilike(search_term),
+                Offer.price_currency.ilike(search_term),
+                Offer.listing_url.ilike(search_term)
+            )
+        )
+    
+    # Apply sorting
+    if sort_by:
+        if sort_by == "domain":
+            # Sort by domain name
+            query = query.join(Domain)
+            if sort_order.lower() == "desc":
+                query = query.order_by(Domain.root_domain.desc())
+            else:
+                query = query.order_by(Domain.root_domain.asc())
+        elif sort_by == "marketplace":
+            # Sort by marketplace name
+            query = query.join(Marketplace)
+            if sort_order.lower() == "desc":
+                query = query.order_by(Marketplace.name.desc())
+            else:
+                query = query.order_by(Marketplace.name.asc())
+        elif hasattr(Offer, sort_by):
+            column = getattr(Offer, sort_by)
+            if sort_order.lower() == "desc":
+                query = query.order_by(column.desc())
+            else:
+                query = query.order_by(column.asc())
+    else:
+        # Default sort by last_seen_at desc (newest first)
+        query = query.order_by(Offer.last_seen_at.desc())
+    
+    # Get total count before pagination
     total = query.count()
+    
+    # Apply pagination
+    offers = query.offset(offset).limit(limit).all()
     
     return {
         "offers": [
@@ -293,20 +418,44 @@ async def admin_update_offer(
 # FX Rate Admin Endpoints
 @router.get("/fx-rates")
 async def admin_get_fx_rates(
-    currency: Optional[str] = None,
     limit: int = 100,
     offset: int = 0,
+    search: Optional[str] = None,
+    sort_by: Optional[str] = None,
+    sort_order: Optional[str] = "desc",
+    currency: Optional[str] = None,
     db: Session = Depends(get_db),
     _: None = Depends(verify_admin_auth)
 ):
-    """Admin: Get FX rates"""
+    """Admin: Get FX rates with search, sort, and pagination"""
     query = db.query(FXRate)
     
+    # Apply legacy currency filter
     if currency:
         query = query.filter(FXRate.currency == currency.upper())
     
-    rates = query.order_by(FXRate.date.desc()).offset(offset).limit(limit).all()
+    # Apply search filter
+    if search:
+        search_term = f"%{search.upper()}%"
+        query = query.filter(FXRate.currency.ilike(search_term))
+    
+    # Apply sorting
+    if sort_by:
+        if hasattr(FXRate, sort_by):
+            column = getattr(FXRate, sort_by)
+            if sort_order.lower() == "desc":
+                query = query.order_by(column.desc())
+            else:
+                query = query.order_by(column.asc())
+    else:
+        # Default sort by date desc (newest first)
+        query = query.order_by(FXRate.date.desc())
+    
+    # Get total count before pagination
     total = query.count()
+    
+    # Apply pagination
+    rates = query.offset(offset).limit(limit).all()
     
     return {
         "fx_rates": [
