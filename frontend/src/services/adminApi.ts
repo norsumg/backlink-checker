@@ -34,8 +34,21 @@ class AdminApiService {
   }
 
   // Marketplaces
-  async getMarketplaces() {
-    const response = await this.api.get('/marketplaces')
+  async getMarketplaces(params?: {
+    limit?: number
+    offset?: number
+    search?: string
+    sort_by?: string
+    sort_order?: string
+  }) {
+    const searchParams = new URLSearchParams()
+    if (params?.limit) searchParams.append('limit', params.limit.toString())
+    if (params?.offset) searchParams.append('offset', params.offset.toString())
+    if (params?.search) searchParams.append('search', params.search)
+    if (params?.sort_by) searchParams.append('sort_by', params.sort_by)
+    if (params?.sort_order) searchParams.append('sort_order', params.sort_order)
+    
+    const response = await this.api.get(`/marketplaces?${searchParams.toString()}`)
     return response.data
   }
 
@@ -50,8 +63,21 @@ class AdminApiService {
   }
 
   // Domains
-  async getDomains(limit = 100, offset = 0) {
-    const response = await this.api.get(`/domains?limit=${limit}&offset=${offset}`)
+  async getDomains(params?: {
+    limit?: number
+    offset?: number
+    search?: string
+    sort_by?: string
+    sort_order?: string
+  }) {
+    const searchParams = new URLSearchParams()
+    if (params?.limit) searchParams.append('limit', params.limit.toString())
+    if (params?.offset) searchParams.append('offset', params.offset.toString())
+    if (params?.search) searchParams.append('search', params.search)
+    if (params?.sort_by) searchParams.append('sort_by', params.sort_by)
+    if (params?.sort_order) searchParams.append('sort_order', params.sort_order)
+    
+    const response = await this.api.get(`/domains?${searchParams.toString()}`)
     return response.data
   }
 
@@ -61,12 +87,25 @@ class AdminApiService {
   }
 
   // Offers
-  async getOffers(limit = 100, offset = 0, domainId?: number, marketplaceId?: number) {
-    let url = `/offers?limit=${limit}&offset=${offset}`
-    if (domainId) url += `&domain_id=${domainId}`
-    if (marketplaceId) url += `&marketplace_id=${marketplaceId}`
+  async getOffers(params?: {
+    limit?: number
+    offset?: number
+    search?: string
+    sort_by?: string
+    sort_order?: string
+    domain_id?: number
+    marketplace_id?: number
+  }) {
+    const searchParams = new URLSearchParams()
+    if (params?.limit) searchParams.append('limit', params.limit.toString())
+    if (params?.offset) searchParams.append('offset', params.offset.toString())
+    if (params?.search) searchParams.append('search', params.search)
+    if (params?.sort_by) searchParams.append('sort_by', params.sort_by)
+    if (params?.sort_order) searchParams.append('sort_order', params.sort_order)
+    if (params?.domain_id) searchParams.append('domain_id', params.domain_id.toString())
+    if (params?.marketplace_id) searchParams.append('marketplace_id', params.marketplace_id.toString())
     
-    const response = await this.api.get(url)
+    const response = await this.api.get(`/offers?${searchParams.toString()}`)
     return response.data
   }
 
@@ -81,11 +120,23 @@ class AdminApiService {
   }
 
   // FX Rates
-  async getFxRates(currency?: string, limit = 100, offset = 0) {
-    let url = `/fx-rates?limit=${limit}&offset=${offset}`
-    if (currency) url += `&currency=${currency}`
+  async getFxRates(params?: {
+    limit?: number
+    offset?: number
+    search?: string
+    sort_by?: string
+    sort_order?: string
+    currency?: string
+  }) {
+    const searchParams = new URLSearchParams()
+    if (params?.limit) searchParams.append('limit', params.limit.toString())
+    if (params?.offset) searchParams.append('offset', params.offset.toString())
+    if (params?.search) searchParams.append('search', params.search)
+    if (params?.sort_by) searchParams.append('sort_by', params.sort_by)
+    if (params?.sort_order) searchParams.append('sort_order', params.sort_order)
+    if (params?.currency) searchParams.append('currency', params.currency)
     
-    const response = await this.api.get(url)
+    const response = await this.api.get(`/fx-rates?${searchParams.toString()}`)
     return response.data
   }
 

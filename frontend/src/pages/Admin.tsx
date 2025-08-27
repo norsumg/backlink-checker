@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useMutation, useQuery, useQueryClient } from 'react-query'
 import { 
   Settings, 
@@ -14,7 +14,9 @@ import {
   Save,
   X,
   ChevronUp,
-  ChevronDown
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react'
 import { adminApi } from '../services/adminApi'
 
@@ -41,7 +43,14 @@ export function Admin() {
   const [authError, setAuthError] = useState('')
   const queryClient = useQueryClient()
 
-  // Search state
+  // Server-side pagination, search, and sort state
+  const [pagination, setPagination] = useState({
+    marketplaces: { limit: 50, offset: 0 },
+    domains: { limit: 50, offset: 0 },
+    offers: { limit: 50, offset: 0 },
+    fx_rates: { limit: 50, offset: 0 }
+  })
+
   const [searchTerms, setSearchTerms] = useState({
     marketplaces: '',
     domains: '',
@@ -49,26 +58,23 @@ export function Admin() {
     fx_rates: ''
   })
 
-  // Sort state  
-  const [sortConfig, setSortConfig] = useState<{
-    key: string
-    direction: 'asc' | 'desc'
-  }>({ key: '', direction: 'asc' })
+  const [sortConfig, setSortConfig] = useState({
+    marketplaces: { key: '', direction: 'asc' as 'asc' | 'desc' },
+    domains: { key: '', direction: 'asc' as 'asc' | 'desc' },
+    offers: { key: '', direction: 'asc' as 'asc' | 'desc' },
+    fx_rates: { key: '', direction: 'asc' as 'asc' | 'desc' }
+  })
 
   // Edit state
   const [editingRows, setEditingRows] = useState<Set<number>>(new Set())
   const [editData, setEditData] = useState<Record<number, any>>({})
   const [saveLoading, setSaveLoading] = useState<Set<number>>(new Set())
 
-  // Reset search and sort when switching tabs
+  // Debounced search
+  const [searchTimeouts, setSearchTimeouts] = useState<Record<string, NodeJS.Timeout>>({})
+
+  // Reset state when switching tabs
   useEffect(() => {
-    setSearchTerms({
-      marketplaces: '',
-      domains: '',
-      offers: '',
-      fx_rates: ''
-    })
-    setSortConfig({ key: '', direction: 'asc' })
     setEditingRows(new Set())
     setEditData({})
   }, [activeTab])
@@ -106,7 +112,7 @@ export function Admin() {
     queryClient.clear()
   }
 
-  // Queries
+  // Queries with server-side parameters
   const statsQuery = useQuery<AdminStats>(
     'admin-stats',
     () => adminApi.getStats(),
@@ -114,27 +120,63 @@ export function Admin() {
   )
 
   const marketplacesQuery = useQuery(
-    'admin-marketplaces',
-    () => adminApi.getMarketplaces(),
-    { enabled: isAuthenticated && activeTab === 'marketplaces' }
+    ['admin-marketplaces', pagination.marketplaces, searchTerms.marketplaces, sortConfig.marketplaces],
+    () => adminApi.getMarketplaces({
+      limit: pagination.marketplaces.limit,
+      offset: pagination.marketplaces.offset,
+      search: searchTerms.marketplaces || undefined,
+      sort_by: sortConfig.marketplaces.key || undefined,
+      sort_order: sortConfig.marketplaces.direction
+    }),
+    { 
+      enabled: isAuthenticated && activeTab === 'marketplaces',
+      keepPreviousData: true
+    }
   )
 
   const domainsQuery = useQuery(
-    'admin-domains',
-    () => adminApi.getDomains(),
-    { enabled: isAuthenticated && activeTab === 'domains' }
+    ['admin-domains', pagination.domains, searchTerms.domains, sortConfig.domains],
+    () => adminApi.getDomains({
+      limit: pagination.domains.limit,
+      offset: pagination.domains.offset,
+      search: searchTerms.domains || undefined,
+      sort_by: sortConfig.domains.key || undefined,
+      sort_order: sortConfig.domains.direction
+    }),
+    { 
+      enabled: isAuthenticated && activeTab === 'domains',
+      keepPreviousData: true
+    }
   )
 
   const offersQuery = useQuery(
-    'admin-offers',
-    () => adminApi.getOffers(),
-    { enabled: isAuthenticated && activeTab === 'offers' }
+    ['admin-offers', pagination.offers, searchTerms.offers, sortConfig.offers],
+    () => adminApi.getOffers({
+      limit: pagination.offers.limit,
+      offset: pagination.offers.offset,
+      search: searchTerms.offers || undefined,
+      sort_by: sortConfig.offers.key || undefined,
+      sort_order: sortConfig.offers.direction
+    }),
+    { 
+      enabled: isAuthenticated && activeTab === 'offers',
+      keepPreviousData: true
+    }
   )
 
   const fxRatesQuery = useQuery(
-    'admin-fx-rates',
-    () => adminApi.getFxRates(),
-    { enabled: isAuthenticated && activeTab === 'fx_rates' }
+    ['admin-fx-rates', pagination.fx_rates, searchTerms.fx_rates, sortConfig.fx_rates],
+    () => adminApi.getFxRates({
+      limit: pagination.fx_rates.limit,
+      offset: pagination.fx_rates.offset,
+      search: searchTerms.fx_rates || undefined,
+      sort_by: sortConfig.fx_rates.key || undefined,
+      sort_order: sortConfig.fx_rates.direction
+    }),
+    { 
+      enabled: isAuthenticated && activeTab === 'fx_rates',
+      keepPreviousData: true
+    }
   )
 
   // Mutations
@@ -178,61 +220,55 @@ export function Admin() {
     }
   )
 
-  // Helper functions - MUST be before useMemo hooks
-  const sortData = (data: any[], key: string, direction: 'asc' | 'desc') => {
-    return [...data].sort((a, b) => {
-      const aVal = a[key]
-      const bVal = b[key]
-      
-      if (typeof aVal === 'number' && typeof bVal === 'number') {
-        return direction === 'asc' ? aVal - bVal : bVal - aVal
+  // Server-side pagination handlers
+  const handlePageChange = useCallback((table: string, page: number) => {
+    setPagination(prev => ({
+      ...prev,
+      [table]: {
+        ...prev[table as keyof typeof prev],
+        offset: page * prev[table as keyof typeof prev].limit
       }
+    }))
+  }, [])
+
+  // Debounced search handler
+  const handleSearch = useCallback((table: keyof typeof searchTerms, value: string) => {
+    // Clear existing timeout
+    if (searchTimeouts[table]) {
+      clearTimeout(searchTimeouts[table])
+    }
+    
+    // Set new timeout for debounced search
+    const timeout = setTimeout(() => {
+      setSearchTerms(prev => ({ ...prev, [table]: value }))
+      // Reset to first page when searching
+      setPagination(prev => ({
+        ...prev,
+        [table]: { ...prev[table], offset: 0 }
+      }))
+    }, 300)
+    
+    setSearchTimeouts(prev => ({ ...prev, [table]: timeout }))
+  }, [searchTimeouts])
+
+  // Sort handler
+  const handleSort = useCallback((table: string, key: string) => {
+    setSortConfig(prev => {
+      const currentConfig = prev[table as keyof typeof prev]
+      const newDirection = currentConfig.key === key && currentConfig.direction === 'asc' ? 'desc' : 'asc'
       
-      if (aVal instanceof Date && bVal instanceof Date) {
-        return direction === 'asc' 
-          ? aVal.getTime() - bVal.getTime()
-          : bVal.getTime() - aVal.getTime()
+      return {
+        ...prev,
+        [table]: { key, direction: newDirection }
       }
-      
-      const aStr = String(aVal || '').toLowerCase()
-      const bStr = String(bVal || '').toLowerCase()
-      return direction === 'asc' ? aStr.localeCompare(bStr) : bStr.localeCompare(aStr)
     })
-  }
-
-  const filterData = (data: any[], searchTerm: string) => {
-    if (!searchTerm) return data
-    return data.filter(item => 
-      Object.values(item).some(value => 
-        String(value || '').toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    )
-  }
-
-  // Processed data with search and sort - MUST be before early return
-  const processedMarketplaces = useMemo(() => {
-    if (!marketplacesQuery.data) return []
-    const filtered = filterData(marketplacesQuery.data, searchTerms.marketplaces)
-    return sortConfig.key ? sortData(filtered, sortConfig.key, sortConfig.direction) : filtered
-  }, [marketplacesQuery.data, searchTerms.marketplaces, sortConfig.key, sortConfig.direction])
-
-  const processedDomains = useMemo(() => {
-    if (!domainsQuery.data?.domains) return []
-    const filtered = filterData(domainsQuery.data.domains, searchTerms.domains)
-    return sortConfig.key ? sortData(filtered, sortConfig.key, sortConfig.direction) : filtered
-  }, [domainsQuery.data?.domains, searchTerms.domains, sortConfig.key, sortConfig.direction])
-
-  const processedOffers = useMemo(() => {
-    if (!offersQuery.data?.offers) return []
-    const filtered = filterData(offersQuery.data.offers, searchTerms.offers)
-    return sortConfig.key ? sortData(filtered, sortConfig.key, sortConfig.direction) : filtered
-  }, [offersQuery.data?.offers, searchTerms.offers, sortConfig.key, sortConfig.direction])
-
-  const processedFxRates = useMemo(() => {
-    if (!fxRatesQuery.data?.fx_rates) return []
-    const filtered = filterData(fxRatesQuery.data.fx_rates, searchTerms.fx_rates)
-    return sortConfig.key ? sortData(filtered, sortConfig.key, sortConfig.direction) : filtered
-  }, [fxRatesQuery.data?.fx_rates, searchTerms.fx_rates, sortConfig.key, sortConfig.direction])
+    
+    // Reset to first page when sorting
+    setPagination(prev => ({
+      ...prev,
+      [table]: { ...prev[table as keyof typeof prev], offset: 0 }
+    }))
+  }, [])
 
   if (!isAuthenticated) {
     return (
@@ -308,18 +344,7 @@ export function Admin() {
     }
   }
 
-  // Search functionality
-  const handleSearch = (table: keyof typeof searchTerms, value: string) => {
-    setSearchTerms(prev => ({ ...prev, [table]: value }))
-  }
-
-  // Sort functionality
-  const handleSort = (key: string) => {
-    setSortConfig(prev => ({
-      key,
-      direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc'
-    }))
-  }
+  // (Server-side handlers defined above)
 
   // Edit functionality
   const startEditing = (id: number, currentData: any) => {
@@ -378,56 +403,162 @@ export function Admin() {
   const SortableHeader = ({ 
     label, 
     sortKey, 
+    table,
     className = "px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" 
   }: { 
     label: string
     sortKey: string
+    table: string
     className?: string 
-  }) => (
-    <th 
-      className={`${className} cursor-pointer hover:bg-gray-100 select-none`}
-      onClick={() => handleSort(sortKey)}
-    >
-      <div className="flex items-center space-x-1">
-        <span>{label}</span>
-        {sortConfig.key === sortKey && (
-          <span className="text-gray-400">
-            {sortConfig.direction === 'asc' ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-          </span>
-        )}
-      </div>
-    </th>
-  )
+  }) => {
+    const currentConfig = sortConfig[table as keyof typeof sortConfig]
+    
+    return (
+      <th 
+        className={`${className} cursor-pointer hover:bg-gray-100 select-none`}
+        onClick={() => handleSort(table, sortKey)}
+      >
+        <div className="flex items-center space-x-1">
+          <span>{label}</span>
+          {currentConfig.key === sortKey && (
+            <span className="text-gray-400">
+              {currentConfig.direction === 'asc' ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+            </span>
+          )}
+        </div>
+      </th>
+    )
+  }
 
   const SearchInput = ({ 
     placeholder, 
-    value, 
-    onChange, 
+    table,
     totalCount, 
-    filteredCount 
+    isLoading 
   }: {
     placeholder: string
-    value: string
-    onChange: (value: string) => void
+    table: string
     totalCount: number
-    filteredCount: number
-  }) => (
-    <div className="mb-4 flex items-center space-x-4">
-      <div className="flex-1 relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-        <input
-          type="text"
-          placeholder={placeholder}
-          className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-        />
+    isLoading?: boolean
+  }) => {
+    const [localValue, setLocalValue] = useState(searchTerms[table as keyof typeof searchTerms])
+    
+    return (
+      <div className="mb-4 flex items-center space-x-4">
+        <div className="flex-1 relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <input
+            type="text"
+            placeholder={placeholder}
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            value={localValue}
+            onChange={(e) => {
+              setLocalValue(e.target.value)
+              handleSearch(table as keyof typeof searchTerms, e.target.value)
+            }}
+          />
+          {isLoading && (
+            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+              <RefreshCw className="h-4 w-4 animate-spin text-gray-400" />
+            </div>
+          )}
+        </div>
+        <div className="text-sm text-gray-500">
+          Total: {totalCount.toLocaleString()} items
+        </div>
       </div>
-      <div className="text-sm text-gray-500">
-        {filteredCount} of {totalCount} items
+    )
+  }
+
+  const Pagination = ({ 
+    currentPage, 
+    totalItems, 
+    itemsPerPage, 
+    onPageChange 
+  }: {
+    currentPage: number
+    totalItems: number
+    itemsPerPage: number
+    onPageChange: (page: number) => void
+  }) => {
+    const totalPages = Math.ceil(totalItems / itemsPerPage)
+    
+    if (totalPages <= 1) return null
+    
+    const startItem = currentPage * itemsPerPage + 1
+    const endItem = Math.min((currentPage + 1) * itemsPerPage, totalItems)
+    
+    return (
+      <div className="flex items-center justify-between px-4 py-3 bg-white border-t border-gray-200">
+        <div className="flex justify-between sm:hidden">
+          <button
+            onClick={() => onPageChange(currentPage - 1)}
+            disabled={currentPage === 0}
+            className="relative inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Previous
+          </button>
+          <button
+            onClick={() => onPageChange(currentPage + 1)}
+            disabled={currentPage === totalPages - 1}
+            className="relative ml-3 inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Next
+          </button>
+        </div>
+        <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+          <div>
+            <p className="text-sm text-gray-700">
+              Showing <span className="font-medium">{startItem}</span> to{' '}
+              <span className="font-medium">{endItem}</span> of{' '}
+              <span className="font-medium">{totalItems.toLocaleString()}</span> results
+            </p>
+          </div>
+          <div>
+            <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+              <button
+                onClick={() => onPageChange(currentPage - 1)}
+                disabled={currentPage === 0}
+                className="relative inline-flex items-center px-2 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-l-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+              
+              {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                const pageNum = currentPage < 3 ? i : 
+                  currentPage > totalPages - 3 ? totalPages - 5 + i : 
+                  currentPage - 2 + i
+                
+                if (pageNum < 0 || pageNum >= totalPages) return null
+                
+                return (
+                  <button
+                    key={pageNum}
+                    onClick={() => onPageChange(pageNum)}
+                    className={`relative inline-flex items-center px-4 py-2 text-sm font-medium border ${
+                      pageNum === currentPage
+                        ? 'z-10 bg-primary-50 border-primary-500 text-primary-600'
+                        : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                    }`}
+                  >
+                    {pageNum + 1}
+                  </button>
+                )
+              })}
+              
+              <button
+                onClick={() => onPageChange(currentPage + 1)}
+                disabled={currentPage === totalPages - 1}
+                className="relative inline-flex items-center px-2 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-r-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </button>
+            </nav>
+          </div>
+        </div>
       </div>
-    </div>
-  )
+    )
+  }
 
   const EditableCell = ({ 
     isEditing, 
@@ -575,27 +706,26 @@ export function Admin() {
               
               <SearchInput
                 placeholder="Search marketplaces..."
-                value={searchTerms.marketplaces}
-                onChange={(value) => handleSearch('marketplaces', value)}
-                totalCount={marketplacesQuery.data?.length || 0}
-                filteredCount={processedMarketplaces.length}
+                table="marketplaces"
+                totalCount={marketplacesQuery.data?.total || 0}
+                isLoading={marketplacesQuery.isLoading}
               />
               
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <SortableHeader label="Name" sortKey="name" />
-                      <SortableHeader label="Slug" sortKey="slug" />
-                      <SortableHeader label="Region" sortKey="region" />
-                      <SortableHeader label="Created" sortKey="created_at" />
+                      <SortableHeader label="Name" sortKey="name" table="marketplaces" />
+                      <SortableHeader label="Slug" sortKey="slug" table="marketplaces" />
+                      <SortableHeader label="Region" sortKey="region" table="marketplaces" />
+                      <SortableHeader label="Created" sortKey="created_at" table="marketplaces" />
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Actions
                       </th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {processedMarketplaces.map((marketplace: any) => {
+                    {marketplacesQuery.data?.marketplaces?.map((marketplace: any) => {
                       const isEditing = editingRows.has(marketplace.id)
                       const editingData = editData[marketplace.id] || marketplace
                       
