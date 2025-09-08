@@ -6,7 +6,6 @@ import { useState, useRef, useEffect } from 'react'
 const navigation = [
   { name: 'Dashboard', href: '/', icon: BarChart3 },
   { name: 'Domain Lookup', href: '/lookup', icon: Search },
-  { name: 'Upload CSV', href: '/upload', icon: Upload },
   // Admin is accessible via direct URL /admin but not shown in navigation
 ]
 
@@ -35,7 +34,7 @@ export function Header() {
 
   const handleNavClick = (href: string, e: React.MouseEvent) => {
     // If trying to access protected routes and not authenticated, redirect to auth
-    if (!isAuthenticated && (href === '/lookup' || href === '/upload' || href === '/admin')) {
+    if (!isAuthenticated && (href === '/lookup' || href === '/admin')) {
       e.preventDefault()
       window.location.href = '/auth'
     }
@@ -55,7 +54,7 @@ export function Header() {
           <nav className="flex space-x-8">
             {navigation.map((item) => {
               const isActive = location.pathname === item.href
-              const isProtected = item.href === '/lookup' || item.href === '/upload' || item.href === '/admin'
+              const isProtected = item.href === '/lookup' || item.href === '/admin'
               
               return (
                 <Link

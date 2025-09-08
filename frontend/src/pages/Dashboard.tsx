@@ -19,13 +19,6 @@ export function Dashboard() {
       icon: Search,
       color: 'bg-blue-500',
     },
-    {
-      title: 'Upload CSV',
-      description: 'Import marketplace data from CSV files',
-      href: '/upload',
-      icon: Upload,
-      color: 'bg-green-500',
-    },
   ]
 
   if (isLoading) {
