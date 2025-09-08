@@ -71,8 +71,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
         script.onload = () => {
           if (window.google) {
+            // Ensure the Client ID is actually present
+            if (!import.meta.env.VITE_GOOGLE_CLIENT_ID) {
+              console.error("VITE_GOOGLE_CLIENT_ID is not set. Google Sign-In will not work.");
+              return;
+            }
             window.google.accounts.id.initialize({
-              client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID || 'your-google-client-id',
+              client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
               callback: handleGoogleSignIn,
             });
           }

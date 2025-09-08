@@ -95,6 +95,11 @@ cd backlink-checker
 # Copy environment template
 cp docker-compose.template.yml docker-compose.yml
 
+# Create .env file with your configuration
+# (Required for Google OAuth, Stripe, and other services)
+cp .env.example .env
+# Edit .env with your actual API keys and secrets
+
 # Start all services
 docker-compose up -d --build
 
@@ -118,7 +123,32 @@ docker exec -it backlink-checker-backend-1 alembic upgrade head
    cd backlink-checker
    ```
 
-2. **Backend Setup**
+2. **Environment Configuration**
+   ```bash
+   # Create .env file with your configuration
+   cp .env.example .env
+   
+   # Edit .env with your actual values:
+   # - GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET (from Google Cloud Console)
+   # - STRIPE_* keys (from Stripe Dashboard)
+   # - Strong SECRET_KEY and ADMIN_PASSWORD
+   # - Database password (POSTGRES_PASSWORD)
+   ```
+   
+   **Required .env variables:**
+   ```bash
+   GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
+   GOOGLE_CLIENT_SECRET=your-google-client-secret
+   POSTGRES_PASSWORD=your-strong-database-password
+   SECRET_KEY=your-super-secret-jwt-key
+   ADMIN_PASSWORD=your-admin-password
+   STRIPE_PUBLISHABLE_KEY=pk_test_or_live_key
+   STRIPE_SECRET_KEY=sk_test_or_live_key
+   STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret
+   STRIPE_PRICE_ID=price_your_stripe_price_id
+   ```
+
+3. **Backend Setup**
    ```bash
    cd backend
    python -m venv venv
@@ -126,7 +156,7 @@ docker exec -it backlink-checker-backend-1 alembic upgrade head
    pip install -r requirements.txt
    ```
 
-3. **Database Setup**
+4. **Database Setup**
    ```bash
    # Create PostgreSQL database
    createdb backlink_checker
@@ -135,14 +165,14 @@ docker exec -it backlink-checker-backend-1 alembic upgrade head
    alembic upgrade head
    ```
 
-4. **Frontend Setup**
+5. **Frontend Setup**
    ```bash
    cd frontend
    npm install
    npm run dev
    ```
 
-5. **Start the Backend**
+6. **Start the Backend**
    ```bash
    cd backend
    uvicorn app.main:app --reload --workers 2

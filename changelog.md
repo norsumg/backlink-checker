@@ -5,6 +5,22 @@ All notable changes to the Backlink Price Finder project will be documented in t
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.1] - 2025-09-07
+
+### 🔧 Fixed
+- **Google OAuth Authentication**: Fixed Google "Sign in with Google" functionality that was redirecting to homepage
+- **Environment Variable Handling**: Properly configured VITE_GOOGLE_CLIENT_ID to be passed during Docker build process
+- **Content Security Policy**: Updated CSP headers to allow Google OAuth stylesheets and scripts
+
+### 🔒 Security
+- **Environment Variables**: Moved all hardcoded secrets from docker-compose.yml to .env file
+- **Secret Management**: Removed hardcoded API keys, database passwords, and OAuth secrets from version control
+- **Configuration Security**: All sensitive configuration now properly managed through environment variables
+
+### 📝 Documentation
+- **Setup Instructions**: Added .env file configuration requirements to README
+- **Security Best Practices**: Updated deployment documentation with proper secret management
+
 ## [2.2.0] - 2025-08-27
 
 ### 🚀 Added
