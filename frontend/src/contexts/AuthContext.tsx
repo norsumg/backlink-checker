@@ -79,6 +79,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             window.google.accounts.id.initialize({
               client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
               callback: handleGoogleSignIn,
+              use_fedcm_for_prompt: false, // Disable FedCM to avoid "accounts list empty" error
             });
           }
         };
