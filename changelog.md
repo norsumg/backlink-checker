@@ -5,21 +5,32 @@ All notable changes to the Backlink Price Finder project will be documented in t
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.2.1] - 2025-09-07
+## [2.2.1] - 2025-09-08
 
 ### 🔧 Fixed
-- **Google OAuth Authentication**: Fixed Google "Sign in with Google" functionality that was redirecting to homepage
-- **Environment Variable Handling**: Properly configured VITE_GOOGLE_CLIENT_ID to be passed during Docker build process
-- **Content Security Policy**: Updated CSP headers to allow Google OAuth stylesheets and scripts
+- **Google OAuth Authentication**: Completely fixed Google "Sign in with Google" functionality
+  - Switched from problematic FedCM One Tap API to reliable popup-based OAuth flow
+  - Fixed environment variable passing to frontend Docker builds
+  - Updated backend to support both ID token and user info authentication methods
+  - Resolved "Provider's accounts list is empty" and NetworkError issues
+- **Content Security Policy**: Updated CSP headers to allow Google OAuth resources and profile images
+- **Environment Variable Handling**: Properly configured VITE_GOOGLE_CLIENT_ID for frontend builds
 
 ### 🔒 Security
 - **Environment Variables**: Moved all hardcoded secrets from docker-compose.yml to .env file
 - **Secret Management**: Removed hardcoded API keys, database passwords, and OAuth secrets from version control
 - **Configuration Security**: All sensitive configuration now properly managed through environment variables
+- **Docker Security**: Removed debug logging that could expose sensitive information
+
+### 🚀 Improvements
+- **OAuth Flow**: Switched to popup-based Google OAuth for better reliability and user experience
+- **Backend Flexibility**: Enhanced authentication endpoint to handle multiple OAuth flow types
+- **Build Process**: Streamlined Docker build process with proper environment variable handling
 
 ### 📝 Documentation
-- **Setup Instructions**: Added .env file configuration requirements to README
+- **Setup Instructions**: Added comprehensive .env file configuration requirements to README
 - **Security Best Practices**: Updated deployment documentation with proper secret management
+- **OAuth Configuration**: Updated authentication setup guide with new popup-based flow
 
 ## [2.2.0] - 2025-08-27
 

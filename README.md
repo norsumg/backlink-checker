@@ -99,6 +99,7 @@ cp docker-compose.template.yml docker-compose.yml
 # (Required for Google OAuth, Stripe, and other services)
 cp .env.example .env
 # Edit .env with your actual API keys and secrets
+# IMPORTANT: Both GOOGLE_CLIENT_ID and VITE_GOOGLE_CLIENT_ID must be set
 
 # Start all services
 docker-compose up -d --build
@@ -137,11 +138,19 @@ docker exec -it backlink-checker-backend-1 alembic upgrade head
    
    **Required .env variables:**
    ```bash
+   # Google OAuth (both required for backend and frontend)
    GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
+   VITE_GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
    GOOGLE_CLIENT_SECRET=your-google-client-secret
+   
+   # Database
    POSTGRES_PASSWORD=your-strong-database-password
+   
+   # Security
    SECRET_KEY=your-super-secret-jwt-key
    ADMIN_PASSWORD=your-admin-password
+   
+   # Stripe Billing
    STRIPE_PUBLISHABLE_KEY=pk_test_or_live_key
    STRIPE_SECRET_KEY=sk_test_or_live_key
    STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret

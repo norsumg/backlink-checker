@@ -47,9 +47,7 @@ export function Header() {
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
             <Link to="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
-                <Search className="w-5 h-5 text-white" />
-              </div>
+              <img src="/Logo.png" alt="Backlink Price Finder" className="w-8 h-8" />
               <span className="text-xl font-semibold text-gray-900">Backlink Price Finder</span>
             </Link>
           </div>
@@ -72,9 +70,6 @@ export function Header() {
                 >
                   <item.icon className="w-4 h-4" />
                   <span>{item.name}</span>
-                  {isProtected && !isAuthenticated && (
-                    <span className="text-xs bg-yellow-100 text-yellow-800 px-1 rounded">Login Required</span>
-                  )}
                 </Link>
               )
             })}

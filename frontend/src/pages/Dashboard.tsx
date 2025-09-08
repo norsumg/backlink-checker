@@ -146,43 +146,20 @@ export function Dashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {quickActions.map((action) => (
             <div key={action.title} className="relative">
-              {isAuthenticated ? (
-                <Link
-                  to={action.href}
-                  className="card hover:shadow-md transition-shadow cursor-pointer block"
-                >
-                  <div className="flex items-center">
-                    <div className={`flex-shrink-0 w-12 h-12 ${action.color} rounded-lg flex items-center justify-center`}>
-                      <action.icon className="h-6 w-6 text-white" />
-                    </div>
-                    <div className="ml-4">
-                      <h3 className="text-lg font-medium text-gray-900">{action.title}</h3>
-                      <p className="text-gray-600">{action.description}</p>
-                    </div>
+              <Link
+                to={action.href}
+                className="card hover:shadow-md transition-shadow cursor-pointer block"
+              >
+                <div className="flex items-center">
+                  <div className={`flex-shrink-0 w-12 h-12 ${action.color} rounded-lg flex items-center justify-center`}>
+                    <action.icon className="h-6 w-6 text-white" />
                   </div>
-                </Link>
-              ) : (
-                <div className="card relative">
-                  <div className="flex items-center opacity-60">
-                    <div className={`flex-shrink-0 w-12 h-12 ${action.color} rounded-lg flex items-center justify-center`}>
-                      <action.icon className="h-6 w-6 text-white" />
-                    </div>
-                    <div className="ml-4">
-                      <h3 className="text-lg font-medium text-gray-900">{action.title}</h3>
-                      <p className="text-gray-600">{action.description}</p>
-                    </div>
-                  </div>
-                  <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center rounded-lg">
-                    <Link
-                      to="/auth"
-                      className="bg-primary-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-primary-700 transition-colors flex items-center space-x-2"
-                    >
-                      <Lock className="w-4 h-4" />
-                      <span>Login to Access</span>
-                    </Link>
+                  <div className="ml-4">
+                    <h3 className="text-lg font-medium text-gray-900">{action.title}</h3>
+                    <p className="text-gray-600">{action.description}</p>
                   </div>
                 </div>
-              )}
+              </Link>
             </div>
           ))}
         </div>
