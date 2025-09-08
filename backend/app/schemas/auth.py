@@ -20,7 +20,8 @@ class UserLogin(BaseModel):
 
 
 class GoogleAuthRequest(BaseModel):
-    id_token: str
+    id_token: Optional[str] = None
+    user_info: Optional[dict] = None
 
 
 class Token(BaseModel):

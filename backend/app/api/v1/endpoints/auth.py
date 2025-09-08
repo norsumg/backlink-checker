@@ -109,12 +109,34 @@ async def login(user_credentials: UserLogin, db: Session = Depends(get_db)):
 @router.post("/google", response_model=Token)
 async def google_auth(google_auth: GoogleAuthRequest, db: Session = Depends(get_db)):
     """Authenticate with Google OAuth"""
-    # Verify Google token
-    google_user_info = auth_service.verify_google_token(google_auth.id_token)
-    if not google_user_info:
+    
+    # Handle both ID token and user info approaches
+    if google_auth.id_token:
+        # Traditional ID token approach
+        google_user_info = auth_service.verify_google_token(google_auth.id_token)
+        if not google_user_info:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid Google token"
+            )
+    elif google_auth.user_info:
+        # Popup OAuth approach - user info already provided
+        google_user_info = {
+            'sub': google_auth.user_info.get('id'),
+            'email': google_auth.user_info.get('email'),
+            'name': google_auth.user_info.get('name'),
+            'picture': google_auth.user_info.get('picture')
+        }
+        # Basic validation
+        if not google_user_info.get('email') or not google_user_info.get('sub'):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid user info"
+            )
+    else:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid Google token"
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Either id_token or user_info must be provided"
         )
     
     # Create or update user
