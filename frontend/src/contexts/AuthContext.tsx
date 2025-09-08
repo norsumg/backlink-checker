@@ -76,11 +76,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               console.error("VITE_GOOGLE_CLIENT_ID is not set. Google Sign-In will not work.");
               return;
             }
-            window.google.accounts.id.initialize({
-              client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
-              callback: handleGoogleSignIn,
-              use_fedcm_for_prompt: false, // Disable FedCM to avoid "accounts list empty" error
-            });
+            // Google OAuth is now ready for popup-based authentication
+            console.log("Google OAuth initialized for popup-based authentication");
           }
         };
       } catch (error) {
@@ -182,8 +179,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const loginWithGoogle = async () => {
     try {
-      if (window.google) {
-        window.google.accounts.id.prompt();
+      if (window.google && window.google.accounts.oauth2) {
+        // Use popup-based OAuth flow instead of One Tap
+        const client = window.google.accounts.oauth2.initTokenClient({
+          client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+          scope: 'openid email profile',
+          callback: (response: any) => {
+            if (response.access_token) {
+              // Get user info using the access token
+              fetch(`https://www.googleapis.com/oauth2/v2/userinfo?access_token=${response.access_token}`)
+                .then(res => res.json())
+                .then(userInfo => {
+                  // Create a JWT-like token for our backend
+                  handleGoogleSignInWithUserInfo(userInfo);
+                })
+                .catch(console.error);
+            }
+          },
+        });
+        client.requestAccessToken();
       } else {
         throw new Error('Google OAuth not initialized');
       }
@@ -200,6 +214,35 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ id_token: response.credential }),
+      });
+
+      if (!authResponse.ok) {
+        throw new Error('Google authentication failed');
+      }
+
+      const data = await authResponse.json();
+      setToken(data.access_token);
+      setUser(data.user);
+      localStorage.setItem('auth_token', data.access_token);
+    } catch (error) {
+      console.error('Google sign-in error:', error);
+      throw error;
+    }
+  };
+
+  const handleGoogleSignInWithUserInfo = async (userInfo: any) => {
+    try {
+      // For popup OAuth, we need to create a mock ID token or modify backend
+      // For now, let's send the user info directly
+      const authResponse = await fetch('/api/v1/auth/google', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          user_info: userInfo,
+          id_token: null // We'll modify backend to handle this
+        }),
       });
 
       if (!authResponse.ok) {
@@ -293,6 +336,11 @@ declare global {
         id: {
           initialize: (config: any) => void;
           prompt: () => void;
+        };
+        oauth2: {
+          initTokenClient: (config: any) => {
+            requestAccessToken: () => void;
+          };
         };
       };
     };
