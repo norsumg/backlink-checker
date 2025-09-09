@@ -7,9 +7,8 @@ import { useAuth } from '../contexts/AuthContext'
 
 export function Dashboard() {
   const { isAuthenticated } = useAuth()
-  const { data: stats, isLoading, error } = useQuery<Stats>('stats', getLookupStats, {
-    enabled: isAuthenticated // Only fetch stats if user is authenticated
-  })
+  // Fetch stats for everyone to show on homepage
+  const { data: stats, isLoading, error } = useQuery<Stats>('stats', getLookupStats)
 
   const quickActions = [
     {
@@ -72,6 +71,73 @@ export function Dashboard() {
         </div>
       )}
 
+      {/* Stats Grid for Non-Authenticated Users */}
+      {stats && !isAuthenticated && (
+        <div>
+          <div className="text-center mb-6">
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Our Database at a Glance</h2>
+            <p className="text-gray-600">Real-time data from multiple backlink marketplaces</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="card">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <Globe className="h-8 w-8 text-blue-600" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-500">Total Domains</p>
+                  <p className="text-2xl font-semibold text-gray-900">
+                    {stats.total_domains.toLocaleString()}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="card">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <BarChart3 className="h-8 w-8 text-green-600" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-500">Total Offers</p>
+                  <p className="text-2xl font-semibold text-gray-900">
+                    {stats.total_offers.toLocaleString()}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="card">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <TrendingUp className="h-8 w-8 text-purple-600" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-500">Marketplaces</p>
+                  <p className="text-2xl font-semibold text-gray-900">
+                    {stats.total_marketplaces.toLocaleString()}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="card">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <DollarSign className="h-8 w-8 text-yellow-600" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-500">Avg Price (USD)</p>
+                  <p className="text-2xl font-semibold text-gray-900">
+                    ${stats.avg_price_usd?.toFixed(2) || '0.00'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Stats Grid */}
       {stats && isAuthenticated && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -111,7 +177,7 @@ export function Dashboard() {
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-500">Marketplaces</p>
                 <p className="text-2xl font-semibold text-gray-900">
-                  {stats.total_marketplaces}
+                  {stats.total_marketplaces.toLocaleString()}
                 </p>
               </div>
             </div>
@@ -166,25 +232,25 @@ export function Dashboard() {
             <div>
               <p className="text-sm text-gray-500">Minimum</p>
               <p className="text-lg font-semibold text-gray-900">
-                ${stats.price_range_usd.min.toFixed(2)}
+                ${stats.price_range_usd.min.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </p>
             </div>
             <div>
               <p className="text-sm text-gray-500">25th Percentile</p>
               <p className="text-lg font-semibold text-gray-900">
-                ${stats.price_range_usd.q25.toFixed(2)}
+                ${stats.price_range_usd.q25.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </p>
             </div>
             <div>
               <p className="text-sm text-gray-500">75th Percentile</p>
               <p className="text-lg font-semibold text-gray-900">
-                ${stats.price_range_usd.q75.toFixed(2)}
+                ${stats.price_range_usd.q75.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </p>
             </div>
             <div>
               <p className="text-sm text-gray-500">Maximum</p>
               <p className="text-lg font-semibold text-gray-900">
-                ${stats.price_range_usd.max.toFixed(2)}
+                ${stats.price_range_usd.max.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </p>
             </div>
           </div>
