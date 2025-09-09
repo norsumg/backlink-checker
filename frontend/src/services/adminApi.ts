@@ -144,6 +144,35 @@ class AdminApiService {
     const response = await this.api.delete(`/fx-rates/${id}`)
     return response.data
   }
+
+  // Users
+  async getUsers(params?: {
+    limit?: number
+    offset?: number
+    search?: string
+    sort_by?: string
+    sort_order?: string
+  }) {
+    const searchParams = new URLSearchParams()
+    if (params?.limit) searchParams.append('limit', params.limit.toString())
+    if (params?.offset) searchParams.append('offset', params.offset.toString())
+    if (params?.search) searchParams.append('search', params.search)
+    if (params?.sort_by) searchParams.append('sort_by', params.sort_by)
+    if (params?.sort_order) searchParams.append('sort_order', params.sort_order)
+    
+    const response = await this.api.get(`/users?${searchParams.toString()}`)
+    return response.data
+  }
+
+  async updateUser(id: number, userData: any) {
+    const response = await this.api.put(`/users/${id}`, userData)
+    return response.data
+  }
+
+  async deleteUser(id: number) {
+    const response = await this.api.delete(`/users/${id}`)
+    return response.data
+  }
 }
 
 export const adminApi = new AdminApiService()

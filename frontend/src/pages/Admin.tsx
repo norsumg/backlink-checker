@@ -16,7 +16,8 @@ import {
   ChevronUp,
   ChevronDown,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Users
 } from 'lucide-react'
 import { adminApi } from '../services/adminApi'
 
@@ -39,7 +40,7 @@ interface AdminData {
 export function Admin() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [password, setPassword] = useState('')
-  const [activeTab, setActiveTab] = useState<'stats' | 'marketplaces' | 'domains' | 'offers' | 'fx_rates'>('stats')
+  const [activeTab, setActiveTab] = useState<'stats' | 'marketplaces' | 'domains' | 'offers' | 'fx_rates' | 'users'>('stats')
   const [authError, setAuthError] = useState('')
   const queryClient = useQueryClient()
 
@@ -48,21 +49,24 @@ export function Admin() {
     marketplaces: { limit: 50, offset: 0 },
     domains: { limit: 50, offset: 0 },
     offers: { limit: 50, offset: 0 },
-    fx_rates: { limit: 50, offset: 0 }
+    fx_rates: { limit: 50, offset: 0 },
+    users: { limit: 50, offset: 0 }
   })
 
   const [searchTerms, setSearchTerms] = useState({
     marketplaces: '',
     domains: '',
     offers: '',
-    fx_rates: ''
+    fx_rates: '',
+    users: ''
   })
 
   const [sortConfig, setSortConfig] = useState({
     marketplaces: { key: '', direction: 'asc' as 'asc' | 'desc' },
     domains: { key: '', direction: 'asc' as 'asc' | 'desc' },
     offers: { key: '', direction: 'asc' as 'asc' | 'desc' },
-    fx_rates: { key: '', direction: 'asc' as 'asc' | 'desc' }
+    fx_rates: { key: '', direction: 'asc' as 'asc' | 'desc' },
+    users: { key: '', direction: 'asc' as 'asc' | 'desc' }
   })
 
   // Edit state
@@ -179,6 +183,21 @@ export function Admin() {
     }
   )
 
+  const usersQuery = useQuery(
+    ['admin-users', pagination.users, searchTerms.users, sortConfig.users],
+    () => adminApi.getUsers({
+      limit: pagination.users.limit,
+      offset: pagination.users.offset,
+      search: searchTerms.users || undefined,
+      sort_by: sortConfig.users.key || undefined,
+      sort_order: sortConfig.users.direction
+    }),
+    { 
+      enabled: isAuthenticated && activeTab === 'users',
+      keepPreviousData: true
+    }
+  )
+
   // Mutations
   const deleteMarketplaceMutation = useMutation(
     (id: number) => adminApi.deleteMarketplace(id),
@@ -215,6 +234,26 @@ export function Admin() {
     {
       onSuccess: () => {
         queryClient.invalidateQueries('admin-fx-rates')
+        queryClient.invalidateQueries('admin-stats')
+      }
+    }
+  )
+
+  const updateUserMutation = useMutation(
+    ({ id, userData }: { id: number; userData: any }) => adminApi.updateUser(id, userData),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries('admin-users')
+        queryClient.invalidateQueries('admin-stats')
+      }
+    }
+  )
+
+  const deleteUserMutation = useMutation(
+    (id: number) => adminApi.deleteUser(id),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries('admin-users')
         queryClient.invalidateQueries('admin-stats')
       }
     }
@@ -322,7 +361,8 @@ export function Admin() {
     { id: 'marketplaces', label: 'Marketplaces', icon: Settings },
     { id: 'domains', label: 'Domains', icon: Database },
     { id: 'offers', label: 'Offers', icon: Database },
-    { id: 'fx_rates', label: 'FX Rates', icon: Database }
+    { id: 'fx_rates', label: 'FX Rates', icon: Database },
+    { id: 'users', label: 'Users', icon: Users }
   ] as const
 
   const handleDelete = (type: string, id: number, name: string) => {
@@ -339,6 +379,9 @@ export function Admin() {
           break
         case 'fx_rate':
           deleteFxRateMutation.mutate(id)
+          break
+        case 'user':
+          deleteUserMutation.mutate(id)
           break
       }
     }
@@ -384,6 +427,10 @@ export function Admin() {
         case 'offer':
           await adminApi.updateOffer(id, data)
           queryClient.invalidateQueries('admin-offers')
+          break
+        case 'user':
+          await adminApi.updateUser(id, data)
+          queryClient.invalidateQueries('admin-users')
           break
       }
       cancelEditing(id)
@@ -1047,6 +1094,152 @@ export function Admin() {
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'users' && (
+          <div className="card overflow-hidden">
+            <div className="px-4 py-5 sm:p-6">
+              <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
+                Users
+              </h3>
+              
+              <SearchInput
+                placeholder="Search users..."
+                table="users"
+                totalCount={usersQuery.data?.total || 0}
+                isLoading={usersQuery.isLoading}
+              />
+              
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <SortableHeader label="Email" sortKey="email" table="users" />
+                      <SortableHeader label="Name" sortKey="full_name" table="users" />
+                      <SortableHeader label="Plan" sortKey="plan_type" table="users" />
+                      <SortableHeader label="Searches Used" sortKey="searches_used_this_month" table="users" />
+                      <SortableHeader label="Status" sortKey="is_active" table="users" />
+                      <SortableHeader label="Registered" sortKey="created_at" table="users" />
+                      <SortableHeader label="Last Login" sortKey="last_login" table="users" />
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {usersQuery.data?.users?.map((user: any) => (
+                      <tr key={user.id}>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {user.email}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {editingRows.has(user.id) ? (
+                            <EditableCell
+                              type="text"
+                              value={editData[user.id]?.full_name ?? user.full_name}
+                              onChange={(value) => updateEditData(user.id, 'full_name', value)}
+                            />
+                          ) : (
+                            user.full_name || user.username || '-'
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {editingRows.has(user.id) ? (
+                            <EditableCell
+                              type="select"
+                              value={editData[user.id]?.plan_type ?? user.plan_type}
+                              onChange={(value) => updateEditData(user.id, 'plan_type', value)}
+                              options={[
+                                { value: 'free', label: 'Free' },
+                                { value: 'unlimited', label: 'Unlimited' }
+                              ]}
+                            />
+                          ) : (
+                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                              user.plan_type === 'unlimited' 
+                                ? 'bg-green-100 text-green-800' 
+                                : 'bg-gray-100 text-gray-800'
+                            }`}>
+                              {user.plan_type}
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {editingRows.has(user.id) ? (
+                            <EditableCell
+                              type="number"
+                              value={editData[user.id]?.searches_used_this_month ?? user.searches_used_this_month}
+                              onChange={(value) => updateEditData(user.id, 'searches_used_this_month', value)}
+                            />
+                          ) : (
+                            `${user.searches_used_this_month} / ${user.searches_remaining + user.searches_used_this_month}`
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {editingRows.has(user.id) ? (
+                            <EditableCell
+                              type="checkbox"
+                              value={editData[user.id]?.is_active ?? user.is_active}
+                              onChange={(value) => updateEditData(user.id, 'is_active', value)}
+                            />
+                          ) : (
+                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                              user.is_active 
+                                ? 'bg-green-100 text-green-800' 
+                                : 'bg-red-100 text-red-800'
+                            }`}>
+                              {user.is_active ? 'Active' : 'Inactive'}
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {new Date(user.created_at).toLocaleDateString()}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {user.last_login ? new Date(user.last_login).toLocaleDateString() : 'Never'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                          {editingRows.has(user.id) ? (
+                            <>
+                              <button
+                                onClick={() => handleSave('user', user.id)}
+                                disabled={saveLoading.has(user.id)}
+                                className="text-green-600 hover:text-green-900 disabled:opacity-50"
+                              >
+                                <Save className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => cancelEditing(user.id)}
+                                className="text-gray-600 hover:text-gray-900"
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              <button
+                                onClick={() => startEditing(user.id, user)}
+                                className="text-blue-600 hover:text-blue-900"
+                              >
+                                <Edit className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => handleDelete('user', user.id, user.email)}
+                                className="text-red-600 hover:text-red-900"
+                                disabled={deleteUserMutation.isLoading}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </>
+                          )}
                         </td>
                       </tr>
                     ))}

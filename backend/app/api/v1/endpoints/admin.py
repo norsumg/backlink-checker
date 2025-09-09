@@ -10,6 +10,7 @@ from app.models.marketplace import Marketplace
 from app.models.domain import Domain
 from app.models.offer import Offer
 from app.models.fx_rate import FXRate
+from app.models.user import User
 from app.schemas.marketplace import MarketplaceResponse, MarketplaceCreate
 from app.services.marketplace_service import MarketplaceService
 from app.services.domain_service import DomainService
@@ -488,6 +489,113 @@ async def admin_delete_fx_rate(
     db.commit()
     
     return {"message": f"FX rate {rate_id} deleted successfully"}
+
+# User Admin Endpoints
+@router.get("/users")
+async def admin_get_users(
+    limit: int = 100,
+    offset: int = 0,
+    search: Optional[str] = None,
+    sort_by: Optional[str] = None,
+    sort_order: Optional[str] = "desc",
+    db: Session = Depends(get_db),
+    _: None = Depends(verify_admin_auth)
+):
+    """Admin: Get users with search, sort, and pagination"""
+    query = db.query(User)
+    
+    # Apply search filter
+    if search:
+        search_term = f"%{search.lower()}%"
+        query = query.filter(
+            or_(
+                User.email.ilike(search_term),
+                User.full_name.ilike(search_term),
+                User.username.ilike(search_term)
+            )
+        )
+    
+    # Apply sorting
+    if sort_by:
+        if hasattr(User, sort_by):
+            column = getattr(User, sort_by)
+            if sort_order.lower() == "desc":
+                query = query.order_by(column.desc())
+            else:
+                query = query.order_by(column.asc())
+    else:
+        # Default sort by created_at desc (newest first)
+        query = query.order_by(User.created_at.desc())
+    
+    # Get total count before pagination
+    total = query.count()
+    
+    # Apply pagination
+    users = query.offset(offset).limit(limit).all()
+    
+    return {
+        "users": [
+            {
+                "id": u.id,
+                "email": u.email,
+                "username": u.username,
+                "full_name": u.full_name,
+                "plan_type": u.plan_type,
+                "searches_used_this_month": u.searches_used_this_month,
+                "searches_remaining": u.searches_remaining,
+                "is_active": u.is_active,
+                "is_verified": u.is_verified,
+                "is_admin": u.is_admin,
+                "created_at": u.created_at,
+                "last_login": u.last_login,
+                "subscription_status": u.subscription_status
+            }
+            for u in users
+        ],
+        "total": total,
+        "limit": limit,
+        "offset": offset
+    }
+
+@router.put("/users/{user_id}")
+async def admin_update_user(
+    user_id: int,
+    user_data: dict,
+    db: Session = Depends(get_db),
+    _: None = Depends(verify_admin_auth)
+):
+    """Admin: Update a specific user"""
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Update allowed fields
+    allowed_fields = ['plan_type', 'is_active', 'is_verified', 'is_admin', 'searches_used_this_month']
+    
+    for field, value in user_data.items():
+        if field in allowed_fields and hasattr(user, field):
+            setattr(user, field, value)
+    
+    db.commit()
+    db.refresh(user)
+    
+    return {"message": f"User {user_id} updated successfully"}
+
+@router.delete("/users/{user_id}")
+async def admin_delete_user(
+    user_id: int,
+    db: Session = Depends(get_db),
+    _: None = Depends(verify_admin_auth)
+):
+    """Admin: Delete a specific user"""
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    db.delete(user)
+    db.commit()
+    
+    return {"message": f"User {user_id} deleted successfully"}
 
 # Database Statistics
 @router.get("/stats")
