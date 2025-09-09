@@ -1144,6 +1144,7 @@ export function Admin() {
                           {editingRows.has(user.id) ? (
                             <EditableCell
                               type="text"
+                              isEditing={true}
                               value={editData[user.id]?.full_name ?? user.full_name}
                               onChange={(value) => updateEditData(user.id, 'full_name', value)}
                             />
@@ -1155,6 +1156,7 @@ export function Admin() {
                           {editingRows.has(user.id) ? (
                             <EditableCell
                               type="select"
+                              isEditing={true}
                               value={editData[user.id]?.plan_type ?? user.plan_type}
                               onChange={(value) => updateEditData(user.id, 'plan_type', value)}
                               options={[
@@ -1176,6 +1178,7 @@ export function Admin() {
                           {editingRows.has(user.id) ? (
                             <EditableCell
                               type="number"
+                              isEditing={true}
                               value={editData[user.id]?.searches_used_this_month ?? user.searches_used_this_month}
                               onChange={(value) => updateEditData(user.id, 'searches_used_this_month', value)}
                             />
@@ -1187,6 +1190,7 @@ export function Admin() {
                           {editingRows.has(user.id) ? (
                             <EditableCell
                               type="checkbox"
+                              isEditing={true}
                               value={editData[user.id]?.is_active ?? user.is_active}
                               onChange={(value) => updateEditData(user.id, 'is_active', value)}
                             />
@@ -1210,7 +1214,7 @@ export function Admin() {
                           {editingRows.has(user.id) ? (
                             <>
                               <button
-                                onClick={() => handleSave('user', user.id)}
+                                onClick={() => saveEdit('user', user.id)}
                                 disabled={saveLoading.has(user.id)}
                                 className="text-green-600 hover:text-green-900 disabled:opacity-50"
                               >
