@@ -5,6 +5,32 @@ All notable changes to the Backlink Price Finder project will be documented in t
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.3] - 2025-09-15
+
+### 🔒 CRITICAL SECURITY FIXES
+- **Fixed Multiple Security Vulnerabilities**: Resolved critical authentication and authorization issues
+  - **Removed Free Plan Upgrade Bypass**: Eliminated dangerous `/upgrade` endpoint that allowed free unlimited plan upgrades
+  - **Fixed Unauthenticated CSV Upload**: Added authentication and admin-only access control to CSV upload endpoint
+  - **Fixed Unauthenticated Marketplace Management**: Added proper authentication to create/delete marketplace endpoints
+  - **Replaced Insecure Admin Authentication**: Completely overhauled admin authentication system
+    - **Removed plain-text password transmission** - No longer sends passwords in HTTP headers
+    - **Eliminated localStorage password storage** - Passwords no longer stored in browser
+    - **Implemented JWT-based admin authentication** - Secure token-based authentication
+    - **Added database-backed admin users** - Secure password hashing with bcrypt
+    - **Created secure admin login endpoint** - `/auth/admin-login` with proper credential validation
+  - **Enhanced API Security**: All sensitive endpoints now require proper authentication and authorization
+- **Improved Payment Security**: Plan upgrades now exclusively handled through verified Stripe webhooks
+  - Removed all client-side plan upgrade capabilities
+  - Enhanced webhook validation and processing
+  - Secure subscription lifecycle management
+
+### 🛡️ Security Architecture
+- **Zero-Trust API Design**: All endpoints now properly authenticated
+- **Admin-Only Operations**: CSV uploads and marketplace management restricted to admin users
+- **Payment Verification**: Subscription changes only processed after successful Stripe payment
+
+---
+
 ## [2.3.2] - 2025-09-15
 
 ### 🔧 Google OAuth Fixes

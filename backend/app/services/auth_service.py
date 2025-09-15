@@ -204,6 +204,31 @@ class AuthService:
             db.commit()
             db.refresh(user)
         return user
+    
+    def create_admin_user(self, db: Session, username: str, password: str, email: str = None) -> User:
+        """Create an admin user with hashed password"""
+        # Check if admin user already exists
+        existing_admin = db.query(User).filter(User.username == username).first()
+        if existing_admin:
+            raise ValueError(f"Admin user '{username}' already exists")
+        
+        # Create admin user
+        hashed_password = self.get_password_hash(password)
+        admin_user = User(
+            username=username,
+            email=email or f"{username}@admin.local",
+            hashed_password=hashed_password,
+            is_admin=True,
+            is_active=True,
+            is_verified=True,
+            plan_type='unlimited'
+        )
+        
+        db.add(admin_user)
+        db.commit()
+        db.refresh(admin_user)
+        
+        return admin_user
 
 
 auth_service = AuthService()

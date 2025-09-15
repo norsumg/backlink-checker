@@ -39,6 +39,7 @@ interface AdminData {
 
 export function Admin() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [activeTab, setActiveTab] = useState<'stats' | 'marketplaces' | 'domains' | 'offers' | 'fx_rates' | 'users'>('stats')
   const [authError, setAuthError] = useState('')
@@ -85,9 +86,9 @@ export function Admin() {
 
   // Check if already authenticated (from localStorage)
   useEffect(() => {
-    const savedAuth = localStorage.getItem('admin_auth')
-    if (savedAuth) {
-      adminApi.setAuthToken(savedAuth)
+    const savedToken = localStorage.getItem('admin_jwt_token')
+    if (savedToken) {
+      adminApi.setAuthToken(savedToken)
       setIsAuthenticated(true)
     }
   }, [])
@@ -95,24 +96,26 @@ export function Admin() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
-      adminApi.setAuthToken(password)
-      // Test the auth by making a stats request
-      await adminApi.getStats()
-      localStorage.setItem('admin_auth', password)
+      // Use secure admin login endpoint
+      const response = await adminApi.adminLogin(username, password)
+      
+      // Store JWT token securely
+      localStorage.setItem('admin_jwt_token', response.access_token)
       setIsAuthenticated(true)
       setAuthError('')
+      setUsername('')
       setPassword('')
-    } catch (error) {
-      setAuthError('Invalid admin password')
+    } catch (error: any) {
+      setAuthError('Invalid admin credentials')
       adminApi.setAuthToken('')
-      localStorage.removeItem('admin_auth')
+      localStorage.removeItem('admin_jwt_token')
     }
   }
 
   const handleLogout = () => {
     setIsAuthenticated(false)
     adminApi.setAuthToken('')
-    localStorage.removeItem('admin_auth')
+    localStorage.removeItem('admin_jwt_token')
     queryClient.clear()
   }
 
@@ -321,10 +324,25 @@ export function Admin() {
               Admin Access Required
             </h2>
             <p className="mt-2 text-center text-sm text-gray-600">
-              Enter admin password to access database management
+              Enter admin credentials to access database management
             </p>
           </div>
           <form className="mt-8 space-y-6" onSubmit={handleLogin}>
+            <div>
+              <label htmlFor="username" className="sr-only">
+                Admin Username
+              </label>
+              <input
+                id="username"
+                name="username"
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="relative block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-primary-500 focus:border-primary-500 mb-3"
+                placeholder="Admin username"
+                required
+              />
+            </div>
             <div>
               <label htmlFor="password" className="sr-only">
                 Admin Password

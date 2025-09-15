@@ -54,5 +54,10 @@ class PasswordReset(BaseModel):
     new_password: str
 
 
+class AdminLogin(BaseModel):
+    username: str
+    password: str
+
+
 # Update Token schema to avoid circular import
 Token.model_rebuild()

@@ -27,6 +27,26 @@ class AdminApiService {
     this.authToken = token
   }
 
+  // Secure admin authentication
+  async adminLogin(username: string, password: string) {
+    const authApi = axios.create({
+      baseURL: API_BASE_URL,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+    
+    const response = await authApi.post('/auth/admin-login', {
+      username,
+      password
+    })
+    
+    // Set the JWT token for future requests
+    this.setAuthToken(response.data.access_token)
+    
+    return response.data
+  }
+
   // Statistics
   async getStats() {
     const response = await this.api.get('/stats')

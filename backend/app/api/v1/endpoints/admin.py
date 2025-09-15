@@ -16,27 +16,15 @@ from app.services.marketplace_service import MarketplaceService
 from app.services.domain_service import DomainService
 from app.services.offer_service import OfferService
 from app.services.fx_service import FXService
+from app.api.v1.endpoints.auth import get_current_admin_user
 
 router = APIRouter()
 
 from app.core.config import settings
 
-def verify_admin_auth(authorization: str = Header(None)):
-    """Admin authentication using environment variable"""
-    if not authorization:
-        raise HTTPException(status_code=401, detail="Admin authorization required")
-    
-    # Expect "Bearer <password>"
-    try:
-        scheme, password = authorization.split()
-        if scheme.lower() != "bearer":
-            raise HTTPException(status_code=401, detail="Invalid authorization scheme")
-        
-        # Use environment variable for admin password
-        if password != settings.admin_password:
-            raise HTTPException(status_code=401, detail="Invalid admin password")
-    except ValueError:
-        raise HTTPException(status_code=401, detail="Invalid authorization format")
+# REMOVED: Insecure plain-text admin authentication
+# Admin authentication now uses secure JWT tokens with admin claims
+# See get_current_admin_user in auth.py for the secure implementation
 
 # Marketplace Admin Endpoints
 @router.get("/marketplaces")
@@ -47,7 +35,7 @@ async def admin_get_marketplaces(
     sort_by: Optional[str] = None,
     sort_order: Optional[str] = "asc",
     db: Session = Depends(get_db),
-    _: None = Depends(verify_admin_auth)
+    admin_user: User = Depends(get_current_admin_user)
 ):
     """Admin: Get marketplaces with search, sort, and pagination"""
     # Build base query
@@ -104,7 +92,7 @@ async def admin_get_marketplaces(
 async def admin_delete_marketplace(
     marketplace_id: int,
     db: Session = Depends(get_db),
-    _: None = Depends(verify_admin_auth)
+    admin_user: User = Depends(get_current_admin_user)
 ):
     """Admin: Delete a marketplace and all its offers"""
     marketplace_service = MarketplaceService(db)
@@ -120,7 +108,7 @@ async def admin_update_marketplace(
     marketplace_id: int,
     marketplace_data: MarketplaceCreate,
     db: Session = Depends(get_db),
-    _: None = Depends(verify_admin_auth)
+    admin_user: User = Depends(get_current_admin_user)
 ):
     """Admin: Update a marketplace"""
     marketplace = db.query(Marketplace).filter(Marketplace.id == marketplace_id).first()
@@ -154,7 +142,7 @@ async def admin_get_domains(
     sort_by: Optional[str] = None,
     sort_order: Optional[str] = "asc",
     db: Session = Depends(get_db),
-    _: None = Depends(verify_admin_auth)
+    admin_user: User = Depends(get_current_admin_user)
 ):
     """Admin: Get domains with search, sort, and pagination"""
     # Build base query with offer count
@@ -218,7 +206,7 @@ async def admin_get_domains(
 async def admin_delete_domain(
     domain_id: int,
     db: Session = Depends(get_db),
-    _: None = Depends(verify_admin_auth)
+    admin_user: User = Depends(get_current_admin_user)
 ):
     """Admin: Delete a domain and all its offers"""
     domain = db.query(Domain).filter(Domain.id == domain_id).first()
@@ -243,7 +231,7 @@ async def admin_get_offers(
     domain_id: Optional[int] = None,
     marketplace_id: Optional[int] = None,
     db: Session = Depends(get_db),
-    _: None = Depends(verify_admin_auth)
+    admin_user: User = Depends(get_current_admin_user)
 ):
     """Admin: Get offers with search, sort, and pagination"""
     query = db.query(Offer).options(
@@ -328,7 +316,7 @@ async def admin_get_offers(
 async def admin_get_zero_price_offers(
     limit: int = 50,
     db: Session = Depends(get_db),
-    _: None = Depends(verify_admin_auth)
+    admin_user: User = Depends(get_current_admin_user)
 ):
     """Admin: Get offers with zero or null price_usd for inspection"""
     offer_service = OfferService(db)
@@ -358,7 +346,7 @@ async def admin_get_zero_price_offers(
 async def admin_delete_zero_price_offers(
     confirm: bool = False,
     db: Session = Depends(get_db),
-    _: None = Depends(verify_admin_auth)
+    admin_user: User = Depends(get_current_admin_user)
 ):
     """Admin: Delete all offers with zero or null price_usd"""
     if not confirm:
@@ -379,7 +367,7 @@ async def admin_delete_zero_price_offers(
 async def admin_delete_offer(
     offer_id: int,
     db: Session = Depends(get_db),
-    _: None = Depends(verify_admin_auth)
+    admin_user: User = Depends(get_current_admin_user)
 ):
     """Admin: Delete a specific offer"""
     offer = db.query(Offer).filter(Offer.id == offer_id).first()
@@ -396,7 +384,7 @@ async def admin_update_offer(
     offer_id: int,
     offer_data: dict,
     db: Session = Depends(get_db),
-    _: None = Depends(verify_admin_auth)
+    admin_user: User = Depends(get_current_admin_user)
 ):
     """Admin: Update a specific offer"""
     offer = db.query(Offer).filter(Offer.id == offer_id).first()
@@ -426,7 +414,7 @@ async def admin_get_fx_rates(
     sort_order: Optional[str] = "desc",
     currency: Optional[str] = None,
     db: Session = Depends(get_db),
-    _: None = Depends(verify_admin_auth)
+    admin_user: User = Depends(get_current_admin_user)
 ):
     """Admin: Get FX rates with search, sort, and pagination"""
     query = db.query(FXRate)
@@ -478,7 +466,7 @@ async def admin_get_fx_rates(
 async def admin_delete_fx_rate(
     rate_id: int,
     db: Session = Depends(get_db),
-    _: None = Depends(verify_admin_auth)
+    admin_user: User = Depends(get_current_admin_user)
 ):
     """Admin: Delete an FX rate"""
     rate = db.query(FXRate).filter(FXRate.id == rate_id).first()
@@ -499,7 +487,7 @@ async def admin_get_users(
     sort_by: Optional[str] = None,
     sort_order: Optional[str] = "desc",
     db: Session = Depends(get_db),
-    _: None = Depends(verify_admin_auth)
+    admin_user: User = Depends(get_current_admin_user)
 ):
     """Admin: Get users with search, sort, and pagination"""
     query = db.query(User)
@@ -562,7 +550,7 @@ async def admin_update_user(
     user_id: int,
     user_data: dict,
     db: Session = Depends(get_db),
-    _: None = Depends(verify_admin_auth)
+    admin_user: User = Depends(get_current_admin_user)
 ):
     """Admin: Update a specific user"""
     user = db.query(User).filter(User.id == user_id).first()
@@ -585,7 +573,7 @@ async def admin_update_user(
 async def admin_delete_user(
     user_id: int,
     db: Session = Depends(get_db),
-    _: None = Depends(verify_admin_auth)
+    admin_user: User = Depends(get_current_admin_user)
 ):
     """Admin: Delete a specific user"""
     user = db.query(User).filter(User.id == user_id).first()
@@ -601,7 +589,7 @@ async def admin_delete_user(
 @router.get("/stats")
 async def admin_get_stats(
     db: Session = Depends(get_db),
-    _: None = Depends(verify_admin_auth)
+    admin_user: User = Depends(get_current_admin_user)
 ):
     """Admin: Get comprehensive database statistics"""
     return {

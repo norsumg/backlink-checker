@@ -4,13 +4,48 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.services.auth_service import auth_service
 from app.schemas.auth import (
-    UserCreate, UserLogin, GoogleAuthRequest, Token, UserResponse, PasswordReset
+    UserCreate, UserLogin, GoogleAuthRequest, Token, UserResponse, PasswordReset, AdminLogin
 )
 from app.models.user import User
 from datetime import timedelta
 
 router = APIRouter()
 security = HTTPBearer()
+
+
+def get_current_admin_user(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    db: Session = Depends(get_db)
+) -> User:
+    """Get current authenticated admin user from JWT token"""
+    token = credentials.credentials
+    payload = auth_service.verify_token(token)
+    if payload is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    user_id: int = payload.get("sub")
+    is_admin: bool = payload.get("is_admin", False)
+    
+    if user_id is None or not is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin access required",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    user = db.query(User).filter(User.id == user_id).first()
+    if user is None or not user.is_admin or not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin access required",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    return user
 
 
 def get_current_user(
@@ -241,3 +276,48 @@ async def admin_reset_password(
     db.commit()
     
     return {"message": f"Password successfully reset for {email}"}
+
+
+@router.post("/admin-login", response_model=Token)
+async def admin_login(admin_data: AdminLogin, db: Session = Depends(get_db)):
+    """
+    Secure admin login endpoint that validates credentials and returns JWT token.
+    
+    This replaces the insecure plain-text password authentication system.
+    """
+    # Validate admin credentials - check for admin user in database
+    admin_user = db.query(User).filter(
+        User.username == admin_data.username,
+        User.is_admin == True,
+        User.is_active == True
+    ).first()
+    
+    if not admin_user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid admin credentials"
+        )
+    
+    # Verify password against hashed password in database
+    if not auth_service.verify_password(admin_data.password, admin_user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid admin credentials"
+        )
+    
+    # Update last login
+    admin_user.last_login = auth_service.get_current_time()
+    db.commit()
+    
+    # Create JWT token with admin claims
+    access_token = auth_service.create_access_token(
+        data={"sub": admin_user.id, "is_admin": True},
+        expires_delta=timedelta(hours=24)  # Longer session for admin
+    )
+    
+    return Token(
+        access_token=access_token,
+        token_type="bearer",
+        expires_in=24 * 60 * 60,  # 24 hours in seconds
+        user=UserResponse.from_orm(admin_user)
+    )
