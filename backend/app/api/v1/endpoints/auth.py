@@ -28,17 +28,26 @@ def get_current_admin_user(
             headers={"WWW-Authenticate": "Bearer"},
         )
     
-    user_id: int = payload.get("sub")
+    user_id_str: str = payload.get("sub")
     is_admin: bool = payload.get("is_admin", False)
     
-    if user_id is None or not is_admin:
+    if user_id_str is None or not is_admin:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Admin access required",
             headers={"WWW-Authenticate": "Bearer"},
         )
     
-    user = db.query(User).filter(User.id == user_id).first()
+    try:
+        user_id = int(user_id_str)
+        user = db.query(User).filter(User.id == user_id).first()
+    except (ValueError, TypeError):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Invalid user ID in token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
     if user is None or not user.is_admin or not user.is_active:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -63,15 +72,23 @@ def get_current_user(
             headers={"WWW-Authenticate": "Bearer"},
         )
     
-    user_id: int = payload.get("sub")
-    if user_id is None:
+    user_id_str: str = payload.get("sub")
+    if user_id_str is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Could not validate credentials",
             headers={"WWW-Authenticate": "Bearer"},
         )
     
-    user = db.query(User).filter(User.id == user_id).first()
+    try:
+        user_id = int(user_id_str)
+        user = db.query(User).filter(User.id == user_id).first()
+    except (ValueError, TypeError):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid user ID in token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
     if user is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -314,7 +331,7 @@ async def admin_login(admin_data: AdminLogin, db: Session = Depends(get_db)):
     
     # Create JWT token with admin claims
     access_token = auth_service.create_access_token(
-        data={"sub": admin_user.id, "is_admin": True},
+        data={"sub": str(admin_user.id), "is_admin": True},
         expires_delta=timedelta(hours=24)  # Longer session for admin
     )
     
