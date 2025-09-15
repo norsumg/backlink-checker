@@ -131,19 +131,41 @@ class AuthService:
             if user:
                 # Link existing user to Google
                 user.google_id = google_id
-                # Truncate avatar URL to fit database constraint
+                # Handle avatar URL - try to get a smaller version or truncate safely
                 avatar_url = google_user_info.get('picture')
-                user.avatar_url = avatar_url[:500] if avatar_url else None
+                if avatar_url and len(avatar_url) > 500:
+                    # Try to get a smaller Google avatar by modifying size parameter
+                    if 'googleusercontent.com' in avatar_url and '=s' in avatar_url:
+                        # Replace size parameter with smaller size
+                        import re
+                        avatar_url = re.sub(r'=s\d+', '=s96', avatar_url)
+                    
+                    # If still too long, truncate at a safe point
+                    if len(avatar_url) > 500:
+                        avatar_url = avatar_url[:500]
+                
+                user.avatar_url = avatar_url
                 user.is_verified = True
             else:
                 # Create new user
                 avatar_url = google_user_info.get('picture')
+                if avatar_url and len(avatar_url) > 500:
+                    # Try to get a smaller Google avatar by modifying size parameter
+                    if 'googleusercontent.com' in avatar_url and '=s' in avatar_url:
+                        # Replace size parameter with smaller size
+                        import re
+                        avatar_url = re.sub(r'=s\d+', '=s96', avatar_url)
+                    
+                    # If still too long, truncate at a safe point
+                    if len(avatar_url) > 500:
+                        avatar_url = avatar_url[:500]
+                
                 user = User(
                     email=email,
                     full_name=google_user_info.get('name'),
                     username=google_user_info.get('email', '').split('@')[0],
                     google_id=google_id,
-                    avatar_url=avatar_url[:500] if avatar_url else None,
+                    avatar_url=avatar_url,
                     is_verified=True,
                     is_active=True
                 )
@@ -151,9 +173,20 @@ class AuthService:
         else:
             # Update existing user info
             user.full_name = google_user_info.get('name', user.full_name)
-            # Truncate avatar URL to fit database constraint
+            # Handle avatar URL - try to get a smaller version or truncate safely
             avatar_url = google_user_info.get('picture', user.avatar_url)
-            user.avatar_url = avatar_url[:500] if avatar_url else user.avatar_url
+            if avatar_url and len(avatar_url) > 500:
+                # Try to get a smaller Google avatar by modifying size parameter
+                if 'googleusercontent.com' in avatar_url and '=s' in avatar_url:
+                    # Replace size parameter with smaller size
+                    import re
+                    avatar_url = re.sub(r'=s\d+', '=s96', avatar_url)
+                
+                # If still too long, truncate at a safe point
+                if len(avatar_url) > 500:
+                    avatar_url = avatar_url[:500]
+            
+            user.avatar_url = avatar_url
         
         user.last_login = datetime.utcnow()
         

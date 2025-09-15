@@ -124,10 +124,10 @@ export function Header() {
                 </button>
 
                 {showUserMenu && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
+                  <div className="absolute right-0 mt-2 min-w-48 max-w-80 bg-white rounded-md shadow-lg py-1 z-50">
                     <div className="px-4 py-2 text-sm text-gray-700 border-b border-gray-100">
-                      <div className="font-medium">{user?.full_name || 'User'}</div>
-                      <div className="text-gray-500">{user?.email}</div>
+                      <div className="font-medium truncate">{user?.full_name || 'User'}</div>
+                      <div className="text-gray-500 break-words">{user?.email}</div>
                       {usageStats && (
                         <div className="text-xs text-gray-400 mt-1">
                           {usageStats.plan_type === 'unlimited' ? 'Unlimited Plan' : `${usageStats.plan_type} Plan`}
