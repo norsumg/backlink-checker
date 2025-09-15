@@ -110,50 +110,80 @@ async def login(user_credentials: UserLogin, db: Session = Depends(get_db)):
 async def google_auth(google_auth: GoogleAuthRequest, db: Session = Depends(get_db)):
     """Authenticate with Google OAuth"""
     
-    # Handle both ID token and user info approaches
-    if google_auth.id_token:
-        # Traditional ID token approach
-        google_user_info = auth_service.verify_google_token(google_auth.id_token)
-        if not google_user_info:
+    try:
+        # Check if Google OAuth is properly configured
+        from app.core.config import settings
+        if not settings.google_client_id:
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid Google token"
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Google OAuth is not properly configured on the server"
             )
-    elif google_auth.user_info:
-        # Popup OAuth approach - user info already provided
-        google_user_info = {
-            'sub': google_auth.user_info.get('id'),
-            'email': google_auth.user_info.get('email'),
-            'name': google_auth.user_info.get('name'),
-            'picture': google_auth.user_info.get('picture')
-        }
-        # Basic validation
-        if not google_user_info.get('email') or not google_user_info.get('sub'):
+        
+        # Handle both ID token and user info approaches
+        if google_auth.id_token:
+            # Traditional ID token approach
+            google_user_info = auth_service.verify_google_token(google_auth.id_token)
+            if not google_user_info:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Invalid Google token"
+                )
+        elif google_auth.user_info:
+            # Popup OAuth approach - user info already provided
+            google_user_info = {
+                'sub': google_auth.user_info.get('id'),
+                'email': google_auth.user_info.get('email'),
+                'name': google_auth.user_info.get('name'),
+                'picture': google_auth.user_info.get('picture')
+            }
+            # Basic validation
+            if not google_user_info.get('email') or not google_user_info.get('sub'):
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Invalid user info"
+                )
+        else:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid user info"
+                detail="Either id_token or user_info must be provided"
             )
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Either id_token or user_info must be provided"
+        
+        # Create or update user
+        user = auth_service.create_or_update_google_user(db, google_user_info)
+        
+        # Create access token
+        access_token_expires = timedelta(minutes=auth_service.access_token_expire_minutes)
+        access_token = auth_service.create_access_token(
+            data={"sub": str(user.id)}, expires_delta=access_token_expires
         )
-    
-    # Create or update user
-    user = auth_service.create_or_update_google_user(db, google_user_info)
-    
-    # Create access token
-    access_token_expires = timedelta(minutes=auth_service.access_token_expire_minutes)
-    access_token = auth_service.create_access_token(
-        data={"sub": str(user.id)}, expires_delta=access_token_expires
-    )
-    
-    return Token(
-        access_token=access_token,
-        expires_in=auth_service.access_token_expire_minutes * 60,
-        user=UserResponse.from_orm(user)
-    )
+        
+        return Token(
+            access_token=access_token,
+            expires_in=auth_service.access_token_expire_minutes * 60,
+            user=UserResponse.from_orm(user)
+        )
+        
+    except HTTPException:
+        # Re-raise HTTP exceptions as-is
+        raise
+    except Exception as e:
+        # Log the error for debugging
+        print(f"Google authentication error: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Google authentication failed: {str(e)}"
+        )
 
+
+@router.get("/google-config-check")
+async def check_google_config():
+    """Debug endpoint to check Google OAuth configuration"""
+    from app.core.config import settings
+    return {
+        "google_client_id_configured": bool(settings.google_client_id),
+        "google_client_id_length": len(settings.google_client_id) if settings.google_client_id else 0,
+        "google_client_secret_configured": bool(settings.google_client_secret)
+    }
 
 @router.get("/me", response_model=UserResponse)
 async def get_current_user_info(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):

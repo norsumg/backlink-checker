@@ -50,7 +50,7 @@ A comprehensive web application that helps users discover which guest-post/backl
 - Access to complete marketplace database  
 - Priority support
 - Advanced filtering options
-- Stripe-powered billing with easy cancellation
+- **Live Stripe billing** with secure payment processing and easy cancellation
 
 ## 🛠️ Tech Stack
 
@@ -154,11 +154,11 @@ docker exec -it backlink-checker-backend-1 alembic upgrade head
    SECRET_KEY=your-super-secret-jwt-key
    ADMIN_PASSWORD=your-admin-password
    
-   # Stripe Billing
-   STRIPE_PUBLISHABLE_KEY=pk_test_or_live_key
-   STRIPE_SECRET_KEY=sk_test_or_live_key
-   STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret
-   STRIPE_PRICE_ID=price_your_stripe_price_id
+   # Stripe Billing (Production Keys)
+   STRIPE_PUBLISHABLE_KEY=pk_live_your_live_publishable_key
+   STRIPE_SECRET_KEY=sk_live_your_live_secret_key
+   STRIPE_WEBHOOK_SECRET=whsec_your_live_webhook_secret
+   STRIPE_PRICE_ID=price_your_live_price_id
    ```
 
 3. **Backend Setup**
@@ -248,6 +248,12 @@ backlink-checker/
 └── 📊 sample_data/ # Example CSV files
 
 ## 🎯 Recent Major Updates
+
+### Production Stripe Integration (2025-09-15)
+- 💳 **Live Payment Processing** - Successfully migrated from test to production Stripe
+- 🚀 **Production Billing** - $4.99/month unlimited plan now processing real payments
+- 🔒 **Secure Transactions** - Live webhook handling and customer portal integration
+- 🧹 **Clean Migration** - Seamless transition with proper test data cleanup
 
 ### Visual & User Management (2025-09)
 - 🎨 **Custom Branding** with new logo and favicon for professional appearance

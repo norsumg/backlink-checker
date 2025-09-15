@@ -5,6 +5,30 @@ All notable changes to the Backlink Price Finder project will be documented in t
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.1] - 2025-09-15
+
+### 💳 Production Stripe Integration
+- **Live Payment Processing**: Successfully migrated from Stripe test mode to production
+  - Configured production Stripe API keys and webhook endpoints
+  - Updated environment variables for live payment processing
+  - Resolved customer ID conflicts between test and production environments
+- **Production Billing System**: $4.99/month unlimited plan now processing real payments
+  - Live Stripe checkout sessions for subscription upgrades
+  - Production webhook handling for subscription lifecycle events
+  - Customer portal integration for subscription management
+- **Database Migration**: Cleared test mode Stripe customer data for clean production setup
+  - Removed test mode customer IDs to prevent API conflicts
+  - System now creates fresh production customers for all users
+  - Seamless transition from test to live billing environment
+
+### 🔧 Technical Improvements
+- **Environment Configuration**: Enhanced production deployment process
+  - Streamlined environment variable management for Stripe keys
+  - Improved error handling and debugging for payment processing
+  - Better separation between test and production configurations
+
+---
+
 ## [2.3.0] - 2025-09-09
 
 ### 🎨 Visual & Branding

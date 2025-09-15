@@ -20,7 +20,7 @@ class User(Base):
     
     # OAuth fields
     google_id = Column(String(255), nullable=True, unique=True, index=True)
-    avatar_url = Column(String(500), nullable=True)
+    avatar_url = Column(String(2000), nullable=True)
     
     # Usage tracking
     plan_type = Column(String(20), nullable=False, default='free')

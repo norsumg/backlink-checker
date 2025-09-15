@@ -49,6 +49,11 @@ class AuthService:
     def verify_google_token(self, id_token_str: str) -> Optional[dict]:
         """Verify Google ID token and return user info"""
         try:
+            # Check if Google Client ID is configured
+            if not settings.google_client_id:
+                print("Google Client ID is not configured")
+                return None
+            
             # Verify the token with Google
             idinfo = id_token.verify_oauth2_token(
                 id_token_str, 
@@ -66,6 +71,7 @@ class AuthService:
             return idinfo
         except Exception as e:
             print(f"Google token verification failed: {e}")
+            print(f"Google Client ID configured: {bool(settings.google_client_id)}")
             return None
     
     def authenticate_user(self, db: Session, email: str, password: str) -> Optional[User]:
