@@ -575,15 +575,24 @@ async def admin_delete_user(
     db: Session = Depends(get_db),
     admin_user: User = Depends(get_current_admin_user)
 ):
-    """Admin: Delete a specific user"""
+    """Admin: Delete a specific user and all related data"""
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     
+    # Prevent deletion of admin users (safety check)
+    if user.is_admin:
+        raise HTTPException(status_code=400, detail="Cannot delete admin users")
+    
+    # Delete related UserSearch records first
+    from app.models.user import UserSearch
+    db.query(UserSearch).filter(UserSearch.user_id == user_id).delete()
+    
+    # Now delete the user
     db.delete(user)
     db.commit()
     
-    return {"message": f"User {user_id} deleted successfully"}
+    return {"message": f"User {user_id} and all related data deleted successfully"}
 
 # Database Statistics
 @router.get("/stats")
