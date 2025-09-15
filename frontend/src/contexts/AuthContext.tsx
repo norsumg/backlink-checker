@@ -8,6 +8,7 @@ interface User {
   full_name?: string;
   is_active: boolean;
   is_verified: boolean;
+  is_admin?: boolean;
   avatar_url?: string;
   created_at: string;
   last_login?: string;

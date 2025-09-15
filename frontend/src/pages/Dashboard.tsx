@@ -44,13 +44,15 @@ export function Dashboard() {
 
   return (
     <div className="space-y-8">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-        <p className="mt-2 text-gray-600">
-          Monitor your backlink marketplace data and performance
-        </p>
-      </div>
+      {/* Header - only show for authenticated users */}
+      {isAuthenticated && (
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+          <p className="mt-2 text-gray-600">
+            Monitor your backlink marketplace data and performance
+          </p>
+        </div>
+      )}
 
       {/* Welcome Section for Non-Authenticated Users */}
       {!isAuthenticated && (

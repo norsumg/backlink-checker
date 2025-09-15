@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Search, Upload, BarChart3, Settings, LogOut, User, ChevronDown, Star, CreditCard } from 'lucide-react'
+import { Search, Upload, BarChart3, Settings, LogOut, User, ChevronDown, Star, CreditCard, Shield } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useState, useRef, useEffect } from 'react'
 
@@ -46,8 +46,8 @@ export function Header() {
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
             <Link to="/" className="flex items-center space-x-2">
-              <img src="/Logo.png" alt="Backlink Price Finder" className="w-8 h-8" />
-              <span className="text-xl font-semibold text-gray-900">Backlink Price Finder</span>
+              <img src="/Favicon.png" alt="Backlink Price Checker" className="w-8 h-8" />
+              <span className="text-xl font-semibold text-gray-900">Backlink Price Checker</span>
             </Link>
           </div>
           
@@ -157,6 +157,28 @@ export function Header() {
                         <Star className="w-4 h-4" />
                         <span>Upgrade Plan</span>
                       </Link>
+                    )}
+                    
+                    {/* Admin menu items */}
+                    {user?.is_admin && (
+                      <>
+                        <Link
+                          to="/admin"
+                          onClick={() => setShowUserMenu(false)}
+                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
+                        >
+                          <Shield className="w-4 h-4" />
+                          <span>Admin</span>
+                        </Link>
+                        <Link
+                          to="/upload"
+                          onClick={() => setShowUserMenu(false)}
+                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
+                        >
+                          <Upload className="w-4 h-4" />
+                          <span>Upload</span>
+                        </Link>
+                      </>
                     )}
                     
                     <button
