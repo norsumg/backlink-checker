@@ -308,7 +308,8 @@ async def admin_login(admin_data: AdminLogin, db: Session = Depends(get_db)):
         )
     
     # Update last login
-    admin_user.last_login = auth_service.get_current_time()
+    from datetime import datetime
+    admin_user.last_login = datetime.utcnow()
     db.commit()
     
     # Create JWT token with admin claims
