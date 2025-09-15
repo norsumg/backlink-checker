@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
+from sqlalchemy import or_
 from app.core.database import get_db
 from app.services.auth_service import auth_service
 from app.schemas.auth import (
@@ -286,8 +287,9 @@ async def admin_login(admin_data: AdminLogin, db: Session = Depends(get_db)):
     This replaces the insecure plain-text password authentication system.
     """
     # Validate admin credentials - check for admin user in database
+    # Look up by username OR email to handle both cases
     admin_user = db.query(User).filter(
-        User.username == admin_data.username,
+        or_(User.username == admin_data.username, User.email == admin_data.username),
         User.is_admin == True,
         User.is_active == True
     ).first()
