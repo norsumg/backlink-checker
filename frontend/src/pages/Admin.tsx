@@ -101,10 +101,17 @@ export function Admin() {
       
       // Store JWT token securely
       localStorage.setItem('admin_jwt_token', response.access_token)
+      
+      // Ensure the token is set in the API service (should already be done by adminLogin)
+      adminApi.setAuthToken(response.access_token)
+      
       setIsAuthenticated(true)
       setAuthError('')
       setUsername('')
       setPassword('')
+      
+      // Force refresh of queries after successful login
+      queryClient.invalidateQueries()
     } catch (error: any) {
       setAuthError('Invalid admin credentials')
       adminApi.setAuthToken('')
