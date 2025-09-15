@@ -1,5 +1,35 @@
 # Deployment Guide - Backlink Price Finder
 
+## 🛡️ **Security Prerequisites**
+
+### Docker Installation
+**⚠️ SECURITY NOTICE**: Only install Docker from official sources.
+
+**Ubuntu/Debian:**
+```bash
+# Update package index
+sudo apt-get update
+
+# Install Docker from official repository
+sudo apt-get install -y docker.io docker-compose
+
+# Start and enable Docker
+sudo systemctl start docker
+sudo systemctl enable docker
+```
+
+**CentOS/RHEL:**
+```bash
+# Install Docker from official repository
+sudo yum install -y docker docker-compose
+
+# Start and enable Docker
+sudo systemctl start docker
+sudo systemctl enable docker
+```
+
+**❌ DO NOT** use convenience scripts like `get-docker.sh` in production environments.
+
 ## 🐳 **Current Production Setup**
 
 ### Architecture

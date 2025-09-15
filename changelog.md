@@ -28,6 +28,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Zero-Trust API Design**: All endpoints now properly authenticated
 - **Admin-Only Operations**: CSV uploads and marketplace management restricted to admin users
 - **Payment Verification**: Subscription changes only processed after successful Stripe payment
+- **Production Security Hardening**: Enhanced CORS policy, startup security validation, secure deployment practices
+
+### 🔒 Additional Security Hardening
+- **Secure CORS Policy**: Removed HTTP origins in production, only HTTPS allowed
+- **Startup Security Validation**: Application fails to start with weak default secrets in production
+- **Secure Deployment**: Removed insecure Docker installation script, added official installation guide
+- **Database Integrity**: Fixed user deletion cascade to prevent constraint violations
 
 ---
 

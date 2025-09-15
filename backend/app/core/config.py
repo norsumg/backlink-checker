@@ -1,6 +1,7 @@
 from pydantic_settings import BaseSettings
 from typing import Optional
 import os
+import sys
 
 
 class Settings(BaseSettings):
@@ -21,12 +22,14 @@ class Settings(BaseSettings):
     # API
     api_v1_prefix: str = "/api/v1"
     
-    # CORS
+    # CORS - Only HTTPS in production for security
     allowed_origins: list = [
         "https://backlinkpricechecker.com",
-        "http://backlinkpricechecker.com",
-        "http://localhost:3000", 
-        "http://localhost:8000"
+        # Development origins (only when DEBUG=True)
+        *([
+            "http://localhost:3000", 
+            "http://localhost:8000"
+        ] if os.getenv("DEBUG", "false").lower() == "true" else [])
     ]
     
     # File upload
@@ -49,6 +52,36 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
         case_sensitive = True
+    
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self._validate_production_security()
+    
+    def _validate_production_security(self):
+        """Validate security settings in production"""
+        if not self.debug:  # Production mode
+            # Check for weak default secrets
+            weak_secrets = []
+            
+            if self.secret_key == "your-secret-key-change-in-production":
+                weak_secrets.append("SECRET_KEY")
+            
+            if self.admin_password == "change-this-admin-password":
+                weak_secrets.append("ADMIN_PASSWORD (deprecated but still checked)")
+            
+            if weak_secrets:
+                print("🚨 SECURITY ERROR: Weak default secrets detected in production!")
+                print(f"   Please set secure values for: {', '.join(weak_secrets)}")
+                print("   Application startup aborted for security.")
+                sys.exit(1)
+            
+            # Validate secret key strength
+            if len(self.secret_key) < 32:
+                print("🚨 SECURITY WARNING: SECRET_KEY should be at least 32 characters long")
+                print("   Current length:", len(self.secret_key))
+                sys.exit(1)
+            
+            print("✅ Production security validation passed")
 
 
 settings = Settings()
