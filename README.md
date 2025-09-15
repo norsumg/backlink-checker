@@ -249,6 +249,12 @@ backlink-checker/
 
 ## 🎯 Recent Major Updates
 
+### Google OAuth & UI Improvements (2025-09-15)
+- 🔧 **Fixed Google Sign-In Issues** - Resolved 500 errors caused by long avatar URLs
+- 🎨 **Enhanced User Dropdown** - Responsive sizing and proper email address wrapping
+- 🛡️ **Improved Error Handling** - Better OAuth debugging and validation
+- ⚠️ **Known Issue**: Avatar images may appear broken but authentication works perfectly
+
 ### Production Stripe Integration (2025-09-15)
 - 💳 **Live Payment Processing** - Successfully migrated from test to production Stripe
 - 🚀 **Production Billing** - $4.99/month unlimited plan now processing real payments
