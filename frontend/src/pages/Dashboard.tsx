@@ -58,7 +58,7 @@ export function Dashboard() {
       {!isAuthenticated && (
         <div className="bg-gradient-to-r from-primary-50 to-blue-50 rounded-lg p-8 text-center">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">
-            Welcome to Backlink Price Finder
+            Welcome to Backlink Price Checker
           </h2>
           <p className="text-lg text-gray-600 mb-6 max-w-2xl mx-auto">
             Discover backlink opportunities across multiple marketplaces. 

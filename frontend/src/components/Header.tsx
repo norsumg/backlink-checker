@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Search, Upload, BarChart3, Settings, LogOut, User, ChevronDown, Star, CreditCard, Shield } from 'lucide-react'
+import { Search, Upload, BarChart3, Settings, LogOut, User, ChevronDown, Star, CreditCard, Shield, Menu, X } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useState, useRef, useEffect } from 'react'
 
@@ -13,6 +13,7 @@ export function Header() {
   const location = useLocation()
   const { user, logout, isAuthenticated, usageStats } = useAuth()
   const [showUserMenu, setShowUserMenu] = useState(false)
+  const [showMobileMenu, setShowMobileMenu] = useState(false)
   const userMenuRef = useRef<HTMLDivElement>(null)
 
   // Close user menu when clicking outside
@@ -47,11 +48,13 @@ export function Header() {
           <div className="flex items-center">
             <Link to="/" className="flex items-center space-x-2">
               <img src="/Favicon.png" alt="Backlink Price Checker" className="w-8 h-8" />
-              <span className="text-xl font-semibold text-gray-900">Backlink Price Checker</span>
+              <span className="text-xl font-semibold text-gray-900 hidden sm:block">Backlink Price Checker</span>
+              <span className="text-lg font-semibold text-gray-900 sm:hidden">BPC</span>
             </Link>
           </div>
           
-          <nav className="flex space-x-8">
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex space-x-8">
             {navigation.map((item) => {
               const isActive = location.pathname === item.href
               const isProtected = item.href === '/lookup' || item.href === '/admin'
@@ -74,31 +77,44 @@ export function Header() {
             })}
           </nav>
 
-          {isAuthenticated ? (
-            <div className="flex items-center space-x-4">
-              {/* Upgrade Button for Free Users */}
-              {usageStats && usageStats.plan_type === 'free' && (
-                <Link
-                  to="/pricing"
-                  className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:from-blue-700 hover:to-purple-700 transition-all flex items-center space-x-1 shadow-sm"
-                >
-                  <Star className="w-4 h-4" />
-                  <span>Upgrade</span>
-                </Link>
+          <div className="flex items-center space-x-2">
+            {/* Mobile menu button */}
+            <button
+              onClick={() => setShowMobileMenu(!showMobileMenu)}
+              className="md:hidden p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100"
+            >
+              {showMobileMenu ? (
+                <X className="w-6 h-6" />
+              ) : (
+                <Menu className="w-6 h-6" />
               )}
+            </button>
 
-              {/* Usage Display */}
-              {usageStats && (
-                <div className="text-sm text-gray-600">
-                  {usageStats.plan_type === 'unlimited' ? (
-                    <span className="text-green-600 font-medium">Unlimited Searches</span>
-                  ) : (
-                    <span className={usageStats.searches_remaining <= 1 ? 'text-red-600 font-medium' : 'text-gray-600'}>
-                      {usageStats.searches_remaining} searches left
-                    </span>
-                  )}
-                </div>
-              )}
+            {isAuthenticated ? (
+              <div className="flex items-center space-x-2 md:space-x-4">
+                {/* Upgrade Button for Free Users - Hide on mobile */}
+                {usageStats && usageStats.plan_type === 'free' && (
+                  <Link
+                    to="/pricing"
+                    className="hidden sm:flex bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:from-blue-700 hover:to-purple-700 transition-all items-center space-x-1 shadow-sm"
+                  >
+                    <Star className="w-4 h-4" />
+                    <span>Upgrade</span>
+                  </Link>
+                )}
+
+                {/* Usage Display - Hide on mobile */}
+                {usageStats && (
+                  <div className="hidden lg:block text-sm text-gray-600">
+                    {usageStats.plan_type === 'unlimited' ? (
+                      <span className="text-green-600 font-medium">Unlimited Searches</span>
+                    ) : (
+                      <span className={usageStats.searches_remaining <= 1 ? 'text-red-600 font-medium' : 'text-gray-600'}>
+                        {usageStats.searches_remaining} searches left
+                      </span>
+                    )}
+                  </div>
+                )}
 
               {/* User Menu */}
               <div className="relative" ref={userMenuRef}>
@@ -190,19 +206,88 @@ export function Header() {
                     </button>
                   </div>
                 )}
+                </div>
               </div>
-            </div>
-          ) : (
-            <div className="flex space-x-4">
+            ) : (
               <Link
                 to="/auth"
-                className="bg-primary-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-primary-700 transition-colors"
+                className="bg-primary-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-primary-700 transition-colors"
               >
                 Sign in
               </Link>
-            </div>
-          )}
+            )}
+          </div>
         </div>
+
+        {/* Mobile Navigation Menu */}
+        {showMobileMenu && (
+          <div className="md:hidden border-t border-gray-200">
+            <div className="px-2 pt-2 pb-3 space-y-1">
+              {navigation.map((item) => {
+                const isActive = location.pathname === item.href
+                const isProtected = item.href === '/lookup' || item.href === '/admin'
+                
+                return (
+                  <Link
+                    key={item.name}
+                    to={item.href}
+                    onClick={(e) => {
+                      handleNavClick(item.href, e)
+                      setShowMobileMenu(false)
+                    }}
+                    className={`flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium transition-colors ${
+                      isActive
+                        ? 'bg-primary-50 text-primary-700'
+                        : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                    } ${isProtected && !isAuthenticated ? 'relative' : ''}`}
+                  >
+                    <item.icon className="w-5 h-5" />
+                    <span>{item.name}</span>
+                  </Link>
+                )
+              })}
+              
+              {/* Mobile-only items for authenticated users */}
+              {isAuthenticated && (
+                <>
+                  {/* Show upgrade in mobile menu for free users */}
+                  {usageStats && usageStats.plan_type === 'free' && (
+                    <Link
+                      to="/pricing"
+                      onClick={() => setShowMobileMenu(false)}
+                      className="flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium text-blue-600 hover:bg-blue-50"
+                    >
+                      <Star className="w-5 h-5" />
+                      <span>Upgrade Plan</span>
+                    </Link>
+                  )}
+                  
+                  {/* Admin menu items for mobile */}
+                  {user?.is_admin && (
+                    <>
+                      <Link
+                        to="/admin"
+                        onClick={() => setShowMobileMenu(false)}
+                        className="flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                      >
+                        <Shield className="w-5 h-5" />
+                        <span>Admin</span>
+                      </Link>
+                      <Link
+                        to="/upload"
+                        onClick={() => setShowMobileMenu(false)}
+                        className="flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                      >
+                        <Upload className="w-5 h-5" />
+                        <span>Upload</span>
+                      </Link>
+                    </>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </header>
   )
