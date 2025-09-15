@@ -66,8 +66,7 @@ class Settings(BaseSettings):
             if self.secret_key == "your-secret-key-change-in-production":
                 weak_secrets.append("SECRET_KEY")
             
-            if self.admin_password == "change-this-admin-password":
-                weak_secrets.append("ADMIN_PASSWORD (deprecated but still checked)")
+            # Note: ADMIN_PASSWORD check removed - we now use JWT authentication
             
             if weak_secrets:
                 print("🚨 SECURITY ERROR: Weak default secrets detected in production!")
