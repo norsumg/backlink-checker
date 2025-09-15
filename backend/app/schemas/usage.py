@@ -1,5 +1,4 @@
 from pydantic import BaseModel
-from typing import Literal
 
 
 class UsageStats(BaseModel):
@@ -15,8 +14,7 @@ class UsageStats(BaseModel):
         from_attributes = True
 
 
-class PlanUpgrade(BaseModel):
-    plan_type: Literal["free", "unlimited"]
+# REMOVED: PlanUpgrade schema - no longer needed after removing dangerous upgrade endpoint
 
 
 class SearchCheck(BaseModel):

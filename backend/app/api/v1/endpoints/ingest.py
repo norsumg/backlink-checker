@@ -10,6 +10,8 @@ from app.core.database import get_db
 from app.core.config import settings
 from app.schemas.csv_upload import CSVUploadRequest, CSVUploadResponse
 from app.services.csv_processing_service import CSVProcessingService
+from app.api.v1.endpoints.auth import get_current_user
+from app.models.user import User
 
 router = APIRouter()
 
@@ -18,6 +20,7 @@ router = APIRouter()
 async def upload_csv(
     file: UploadFile = File(...),
     data: str = Form(...),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
@@ -29,7 +32,13 @@ async def upload_csv(
     3. Creates or updates marketplace records
     4. Processes domain and offer data
     5. Returns processing statistics
+    
+    Requires admin privileges.
     """
+    # Check if user is admin
+    if not current_user.is_admin:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
     start_time = time.time()
     
     # Validate file type

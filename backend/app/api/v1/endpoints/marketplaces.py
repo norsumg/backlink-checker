@@ -5,6 +5,8 @@ from typing import List
 from app.core.database import get_db
 from app.services.marketplace_service import MarketplaceService
 from app.schemas.marketplace import MarketplaceCreate, MarketplaceResponse, MarketplaceList
+from app.api.v1.endpoints.auth import get_current_user
+from app.models.user import User
 
 router = APIRouter()
 
@@ -34,11 +36,16 @@ async def get_marketplaces(db: Session = Depends(get_db)):
 @router.post("/", response_model=MarketplaceResponse)
 async def create_marketplace(
     marketplace: MarketplaceCreate,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
-    Create a new marketplace.
+    Create a new marketplace. Requires admin privileges.
     """
+    # Check if user is admin
+    if not current_user.is_admin:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
     marketplace_service = MarketplaceService(db)
     
     # Check if marketplace with same slug already exists
@@ -101,10 +108,18 @@ async def get_marketplace_stats(marketplace_id: int, db: Session = Depends(get_d
 
 
 @router.delete("/{marketplace_id}")
-async def delete_marketplace(marketplace_id: int, db: Session = Depends(get_db)):
+async def delete_marketplace(
+    marketplace_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
     """
-    Delete a marketplace and all associated offers.
+    Delete a marketplace and all associated offers. Requires admin privileges.
     """
+    # Check if user is admin
+    if not current_user.is_admin:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
     marketplace_service = MarketplaceService(db)
     success = marketplace_service.delete_marketplace(marketplace_id)
     

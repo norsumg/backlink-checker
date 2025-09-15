@@ -4,8 +4,8 @@ from app.core.database import get_db
 from app.api.v1.endpoints.auth import get_current_user
 from app.models.user import User
 from app.services.usage_service import usage_service
-from app.schemas.usage import UsageStats, PlanUpgrade
-from typing import List, Dict
+from app.schemas.usage import UsageStats
+from typing import List
 
 router = APIRouter()
 
@@ -20,24 +20,8 @@ async def get_usage_stats(
     return stats
 
 
-@router.post("/upgrade", response_model=Dict[str, str])
-async def upgrade_plan(
-    plan_data: PlanUpgrade,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    """Upgrade user's plan (for testing - in production this would be handled by payment provider)"""
-    try:
-        updated_user = usage_service.upgrade_user_plan(db, current_user, plan_data.plan_type)
-        return {
-            "message": f"Successfully upgraded to {plan_data.plan_type} plan",
-            "plan_type": updated_user.plan_type
-        }
-    except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+# REMOVED: Dangerous /upgrade endpoint that allowed free plan upgrades
+# Plan upgrades are now handled exclusively through Stripe webhooks after successful payment
 
 
 @router.get("/check-limit")
