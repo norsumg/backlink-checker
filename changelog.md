@@ -5,6 +5,72 @@ All notable changes to the Backlink Price Finder project will be documented in t
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.0] - 2025-09-09
+
+### 🎨 Visual & Branding
+- **New Logo & Favicon**: Updated application branding with custom logo and favicon
+  - Replaced generic search icon with custom logo in header
+  - Updated favicon from Vite default to custom design
+  - Improved professional appearance across all pages
+
+### 🏠 Homepage Enhancements
+- **Public Database Stats**: Added impressive database statistics to homepage for non-logged-in users
+  - Displays total domains (107,118+), total offers (171,583+), marketplaces, and average pricing
+  - Creates powerful marketing showcase demonstrating data scale and value
+  - Automatic updates as database grows
+- **Improved Number Formatting**: Added thousands separators to all statistics
+  - Dashboard stats now display as "107,118" instead of "107118"
+  - Price ranges formatted with proper currency display (e.g., "$11,052.00")
+  - Enhanced readability across all numerical displays
+
+### 🧹 User Experience Improvements
+- **Simplified Navigation**: Removed redundant UI text for cleaner interface
+  - Removed "Login Required" badges from header navigation
+  - Removed "Login to Access" overlay from dashboard quick actions
+  - Users still redirected to login when needed, just without explicit prompts
+- **Streamlined Interface**: Removed CSV Upload from public navigation
+  - CSV upload functionality moved to admin-only access
+  - Cleaner homepage focused on core domain lookup feature
+  - Maintains full functionality for administrators
+
+### 👥 Admin Panel - User Management System
+- **Complete User Management**: New comprehensive user administration system
+  - Full user table with search, sort, and pagination capabilities
+  - Inline editing for user details, plan types, and account status
+  - User deletion with confirmation prompts
+- **User Data Display**: Rich user information interface
+  - Email, name, plan type, search usage, registration date, last login
+  - Color-coded status badges for plan types and account status
+  - Search usage tracking with remaining credits display
+- **Admin Actions**: Powerful user management capabilities
+  - Change user plan types (Free ↔ Unlimited)
+  - Activate/deactivate user accounts
+  - Reset monthly search usage counters
+  - Delete users when necessary
+- **Backend API**: Full REST API for user management
+  - GET /api/v1/admin/users with search, sort, pagination
+  - PUT /api/v1/admin/users/{id} for user updates
+  - DELETE /api/v1/admin/users/{id} for user removal
+  - Consistent with existing admin API patterns
+
+### 🔧 Technical Improvements
+- **Docker Environment Variables**: Fixed VITE_GOOGLE_CLIENT_ID passing to frontend builds
+  - Corrected docker-compose.yml to use proper environment variable names
+  - Resolved Google OAuth integration issues in production builds
+  - Improved build-time environment variable handling
+- **TypeScript Fixes**: Resolved compilation errors in admin panel
+  - Fixed missing props in EditableCell components
+  - Corrected function name references
+  - Enhanced type safety across admin interface
+
+### 📊 Database Integration
+- **User Statistics**: Enhanced admin analytics with user data
+  - User count tracking in admin dashboard
+  - Plan type distribution analytics
+  - Integration with existing database statistics
+
+---
+
 ## [2.2.1] - 2025-09-08
 
 ### 🔧 Fixed

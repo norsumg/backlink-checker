@@ -16,13 +16,17 @@ A comprehensive web application that helps users discover which guest-post/backl
 ### 🛠️ For Administrators
 - **📤 Bulk CSV Upload**: Large file support (up to 50MB) with real-time progress tracking
 - **⚡ Batch Processing**: Efficient handling of 10k+ row uploads with progress indicators
-- **🔍 Database-Wide Search**: Search across entire database (121k+ records) with real-time results
+- **🔍 Database-Wide Search**: Search across entire database (170k+ records) with real-time results
 - **📊 Server-Side Sorting**: Efficient database-level sorting for all admin tables
-- **✏️ Inline Editing**: Edit marketplace and offer data directly in tables
+- **✏️ Inline Editing**: Edit marketplace, offer, and user data directly in tables
 - **🏪 Marketplace Management**: Add/edit marketplace configurations with search and sort
 - **💹 FX Rate Management**: Real-time currency conversion setup with advanced filtering
+- **👥 Complete User Management**: Comprehensive user administration system
+  - View, search, and sort all users with detailed information
+  - Edit user plans (Free ↔ Unlimited), account status, and search quotas
+  - User analytics: registration dates, last login, usage patterns
+  - Bulk user operations and account management
 - **📊 Advanced Analytics**: User activity, search patterns, and system metrics
-- **👨‍💼 User Management**: Admin controls for user access and permissions
 - **🧹 Data Quality Tools**: Identify and clean up invalid entries (e.g., zero-price offers)
 
 ### 🔧 Technical Features
@@ -207,6 +211,7 @@ POST /api/v1/ingest/csv # CSV upload (admin)
 GET /api/v1/marketplaces # List marketplaces
 POST /api/v1/auth/login # User authentication
 GET /api/v1/admin/stats # System analytics
+GET /api/v1/admin/users # User management (admin)
 
 ## 📁 Project Structure
 backlink-checker/
@@ -243,6 +248,13 @@ backlink-checker/
 └── 📊 sample_data/ # Example CSV files
 
 ## 🎯 Recent Major Updates
+
+### Visual & User Management (2025-09)
+- 🎨 **Custom Branding** with new logo and favicon for professional appearance
+- 🏠 **Homepage Database Stats** showcasing 170k+ records to non-logged-in users
+- 👥 **Complete User Management** system for administrators with full CRUD operations
+- 🧹 **Simplified UI** removing redundant login prompts for cleaner experience
+- 📊 **Enhanced Number Formatting** with thousands separators across all statistics
 
 ### Performance & Scalability (2025-01)
 - ⚡ **Multi-worker backend** for concurrent request handling
