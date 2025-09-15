@@ -1,6 +1,6 @@
 import { useQuery } from 'react-query'
 import { Link } from 'react-router-dom'
-import { Search, Upload, BarChart3, TrendingUp, Globe, DollarSign, Lock } from 'lucide-react'
+import { Search, Upload, BarChart3, TrendingUp, Globe, DollarSign, Lock, Chrome } from 'lucide-react'
 import { getLookupStats } from '../services/api'
 import { Stats } from '../types'
 import { useAuth } from '../contexts/AuthContext'
@@ -17,6 +17,14 @@ export function Dashboard() {
       href: '/lookup',
       icon: Search,
       color: 'bg-blue-500',
+    },
+    {
+      title: 'Install Chrome Extension',
+      description: 'Releasing soon',
+      href: '#',
+      icon: Chrome,
+      color: 'bg-gray-400',
+      disabled: true,
     },
   ]
 
@@ -207,20 +215,34 @@ export function Dashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {quickActions.map((action) => (
             <div key={action.title} className="relative">
-              <Link
-                to={action.href}
-                className="card hover:shadow-md transition-shadow cursor-pointer block"
-              >
-                <div className="flex items-center">
-                  <div className={`flex-shrink-0 w-12 h-12 ${action.color} rounded-lg flex items-center justify-center`}>
-                    <action.icon className="h-6 w-6 text-white" />
-                  </div>
-                  <div className="ml-4">
-                    <h3 className="text-lg font-medium text-gray-900">{action.title}</h3>
-                    <p className="text-gray-600">{action.description}</p>
+              {action.disabled ? (
+                <div className="card opacity-60 cursor-not-allowed">
+                  <div className="flex items-center">
+                    <div className={`flex-shrink-0 w-12 h-12 ${action.color} rounded-lg flex items-center justify-center`}>
+                      <action.icon className="h-6 w-6 text-white" />
+                    </div>
+                    <div className="ml-4">
+                      <h3 className="text-lg font-medium text-gray-500">{action.title}</h3>
+                      <p className="text-gray-400">{action.description}</p>
+                    </div>
                   </div>
                 </div>
-              </Link>
+              ) : (
+                <Link
+                  to={action.href}
+                  className="card hover:shadow-md transition-shadow cursor-pointer block"
+                >
+                  <div className="flex items-center">
+                    <div className={`flex-shrink-0 w-12 h-12 ${action.color} rounded-lg flex items-center justify-center`}>
+                      <action.icon className="h-6 w-6 text-white" />
+                    </div>
+                    <div className="ml-4">
+                      <h3 className="text-lg font-medium text-gray-900">{action.title}</h3>
+                      <p className="text-gray-600">{action.description}</p>
+                    </div>
+                  </div>
+                </Link>
+              )}
             </div>
           ))}
         </div>

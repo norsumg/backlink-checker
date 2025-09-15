@@ -48,8 +48,8 @@ export function Header() {
           <div className="flex items-center">
             <Link to="/" className="flex items-center space-x-2">
               <img src="/Favicon.png" alt="Backlink Price Checker" className="w-8 h-8" />
-              <span className="text-xl font-semibold text-gray-900 hidden sm:block">Backlink Price Checker</span>
-              <span className="text-lg font-semibold text-gray-900 sm:hidden">BPC</span>
+              <span className="text-xl font-semibold text-gray-900 hidden md:block">Backlink Price Checker</span>
+              <span className="text-sm font-semibold text-gray-900 md:hidden">BacklinkPriceChecker</span>
             </Link>
           </div>
           
