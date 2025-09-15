@@ -131,16 +131,19 @@ class AuthService:
             if user:
                 # Link existing user to Google
                 user.google_id = google_id
-                user.avatar_url = google_user_info.get('picture')
+                # Truncate avatar URL to fit database constraint
+                avatar_url = google_user_info.get('picture')
+                user.avatar_url = avatar_url[:500] if avatar_url else None
                 user.is_verified = True
             else:
                 # Create new user
+                avatar_url = google_user_info.get('picture')
                 user = User(
                     email=email,
                     full_name=google_user_info.get('name'),
                     username=google_user_info.get('email', '').split('@')[0],
                     google_id=google_id,
-                    avatar_url=google_user_info.get('picture'),
+                    avatar_url=avatar_url[:500] if avatar_url else None,
                     is_verified=True,
                     is_active=True
                 )
@@ -148,7 +151,9 @@ class AuthService:
         else:
             # Update existing user info
             user.full_name = google_user_info.get('name', user.full_name)
-            user.avatar_url = google_user_info.get('picture', user.avatar_url)
+            # Truncate avatar URL to fit database constraint
+            avatar_url = google_user_info.get('picture', user.avatar_url)
+            user.avatar_url = avatar_url[:500] if avatar_url else user.avatar_url
         
         user.last_login = datetime.utcnow()
         
